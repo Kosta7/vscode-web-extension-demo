@@ -14,8 +14,22 @@
   "contributes": {
     "commands": [
       {
-        "command": "demo.helloWorld",
-        "title": "Hello World"
+        "command": "demo.authorizeAndFetch",
+        "title": "Authorize & Fetch"
+      }
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "demo.explorer",
+          "name": "Github Repos"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "demo.explorer",
+        "contents": "[Authorize & Fetch](command:demo.authorizeAndFetch)"
       }
     ]
   },
@@ -25,6 +39,7 @@
     "vscode:prepublish": "pnpm run package-web",
     "compile-web": "webpack",
     "watch-web": "webpack --watch",
+    "package": "vsce package",
     "package-web": "webpack --mode production --devtool hidden-source-map",
     "lint": "eslint src --ext ts",
     "run-in-browser": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=. .",
@@ -38,9 +53,9 @@
     "@typescript-eslint/eslint-plugin": "^6.4.1",
     "@typescript-eslint/parser": "^6.4.1",
     "@vscode/test-web": "^0.0.45",
+    "@vscode/vsce": "^2.21.0",
     "assert": "^2.0.0",
     "concurrently": "^8.2.1",
-    "eslint": "^8.47.0",
     "mocha": "^10.2.0",
     "process": "^0.11.10",
     "ts-loader": "^9.4.4",
