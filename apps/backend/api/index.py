@@ -28,8 +28,7 @@ def authorize():
     is_prod = environ["FLASK_ENV"] == "production"
     _scheme = "https" if is_prod else "http"
     redirect_uri = url_for("callback", _external=True, _scheme=_scheme)
-    # return github.authorize_redirect(redirect_uri, scope="public_repo")
-    return redirect_uri
+    return github.authorize_redirect(redirect_uri, scope="public_repo")
 
 
 @app.route("/callback")
