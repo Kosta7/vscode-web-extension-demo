@@ -1,4 +1,4 @@
-from flask import Flask, url_for, Response, request
+from flask import Flask, url_for, Response, jsonify
 from authlib.integrations.flask_client import OAuth
 from os import environ
 from itsdangerous import URLSafeTimedSerializer
@@ -59,15 +59,12 @@ def authorize():
 
     session_id = serializer.dumps(str(uuid4()))
 
-    response = Response()
-    response.headers.add("redirect_url", redirect_url)
-    response.headers.add("session_id", session_id)
-
-    response.headers.add(
-        "Access-Control-Expose-Headers", "redirect_url, session_id"
-    )  # todo: check CORS only for development?
-
-    return response
+    return jsonify(
+        {
+            "redirect_url": redirect_url,
+            "session_id": session_id,
+        }
+    )
 
 
 @app.route("/callback")
