@@ -19,12 +19,6 @@ CORS(
 
 serializer = URLSafeTimedSerializer(environ["SECRET_KEY"])
 
-callback_url = (
-    url_for("callback", _external=True)
-    if environ["ENV"] == "production"
-    else "http://192.168.1.18:8080/callback"  # also try changing to localhost instead both here and in github settings
-)
-
 
 @app.route("/")
 def hello_world():
@@ -35,6 +29,11 @@ def hello_world():
 def authorize():
     client_id = environ["GITHUB_CLIENT_ID"]
     scope = "public_repo"
+    callback_url = (
+        url_for("callback", _external=True)
+        if environ["ENV"] == "production"
+        else "http://192.168.1.18:8080/callback"  # also try changing to localhost instead both here and in github settings
+    )
     state = str(uuid4())
 
     github_auth_url = f"https://github.com/login/oauth/authorize?client_id={client_id}&redirect_uri={quote(callback_url)}&scope={scope}&state={state}"
@@ -58,6 +57,11 @@ def callback():
     code = request.args.get("code", "")
     client_id = environ["GITHUB_CLIENT_ID"]
     client_secret = environ["GITHUB_CLIENT_SECRET"]
+    callback_url = (
+        url_for("callback", _external=True)
+        if environ["ENV"] == "production"
+        else "http://192.168.1.18:8080/callback"  # also try changing to localhost instead both here and in github settings
+    )
     data = {
         "client_id": client_id,
         "client_secret": client_secret,
