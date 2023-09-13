@@ -4,6 +4,7 @@ import { TreeDataProvider } from "./treeDataProvider";
 
 export function activate(context: vscode.ExtensionContext) {
   console.log("The extension is now active in the web extension host!");
+  vscode.window.showInformationMessage("The extension is now active!");
 
   const isDevelopment = vscode.env.machineId === "someValue.machineId";
 
@@ -19,17 +20,22 @@ export function activate(context: vscode.ExtensionContext) {
         {
           method: "POST",
         }
-      ).then((response) => {
-        const redirectUrl = response.headers.get("redirect_url");
-        const sessionId = response.headers.get("session_id");
+      )
+        .then((response) => response.json())
+        .then(({ redirect_url: redirectUrl, session_id: sessionId }) => {
+          vscode.window.showInformationMessage(
+            redirectUrl || "No redirect URL"
+          );
+          vscode.window.showInformationMessage(sessionId || "No session ID");
 
-        console.log("redirectUrl, sessionId", redirectUrl, sessionId, response);
-
-        if (redirectUrl && sessionId) {
-          vscode.env.openExternal(vscode.Uri.parse(redirectUrl));
-          context.secrets.store("sessionId", sessionId);
-        }
-      });
+          if (redirectUrl && sessionId) {
+            vscode.env.openExternal(vscode.Uri.parse(redirectUrl));
+            context.secrets.store("sessionId", sessionId);
+          }
+        })
+        .catch((err) => {
+          vscode.window.showInformationMessage(`catch error: ${err}`);
+        });
     }
   );
 
