@@ -10,13 +10,12 @@ from uuid import uuid4
 app = Flask(__name__)
 app.secret_key = environ["SECRET_KEY"]
 
-if environ["ENV"] == "development":
-    print("CORS enabled")
-    CORS(
-        app,
-        origins="*",
-        resources={r"/authorize": {"methods": ["GET", "POST", "OPTIONS"]}},
-    )
+
+CORS(
+    app,
+    origins="*",
+    resources={r"/authorize": {"methods": ["GET", "POST", "OPTIONS"]}},
+)
 
 oauth = OAuth(app)
 
