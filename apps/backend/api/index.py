@@ -63,11 +63,9 @@ def authorize():
     response.headers.add("redirect_url", redirect_url)
     response.headers.add("session_id", session_id)
 
-    if environ["ENV"] == "development":
-        response.headers.add("Access-Control-Allow-Origin", "*")
-        response.headers.add(
-            "Access-Control-Expose-Headers", "redirect_url, session_id"
-        )  # todo: check CORS only for development?
+    response.headers.add(
+        "Access-Control-Expose-Headers", "redirect_url, session_id"
+    )  # todo: check CORS only for development?
 
     return response
 
