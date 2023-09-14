@@ -2,7 +2,7 @@ from flask import Flask, url_for, jsonify, request, abort
 from os import environ
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 from flask_cors import CORS
-from urllib.parse import urlparse, parse_qs, quote
+from urllib.parse import quote
 from uuid import uuid4
 import requests
 import boto3
