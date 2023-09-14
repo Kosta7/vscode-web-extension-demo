@@ -16,8 +16,8 @@ CORS(
     app,
     origins="*",
     resources={
-        r"/authorize": {"methods": ["GET", "POST", "OPTIONS"]},
-        r"/repos/<owner>/<repo>/files": {"methods": ["GET", "POST", "OPTIONS"]},
+        r"/authorize": {"methods": ["POST"]},
+        r"/repos/<owner>/<repo>/files": {"methods": ["GET"]},
     },
 )
 
@@ -36,7 +36,9 @@ aws_client = aws_session.client(
     region_name=environ["MY_AWS_REGION_NAME"],
     aws_access_key_id=environ["MY_AWS_ACCESS_KEY_ID"],
     aws_secret_access_key=environ["MY_AWS_SECRET_ACCESS_KEY"],
-    endpoint_url=environ["MY_AWS_ENDPOINT_URL"],
+    endpoint_url=environ["MY_AWS_ENDPOINT_URL"]
+    if environ["ENV"] == "development"
+    else None,
 )
 
 serializer = URLSafeTimedSerializer(environ["SECRET_KEY"])
@@ -47,7 +49,7 @@ def hello_world():
     return "Hello, World!"
 
 
-@app.route("/authorize", methods=["GET", "POST", "OPTIONS"])
+@app.route("/authorize", methods=["POST"])
 def authorize():
     try:
         session_id = serializer.dumps(str(uuid4()))
@@ -60,7 +62,7 @@ def authorize():
     callback_url = (
         url_for("callback", _external=True)
         if environ["ENV"] == "production"
-        else "http://localhost:8080/callback"  # also try changing to localhost instead both here and in github settings
+        else "http://localhost:8080/callback"
     )
 
     github_auth_url = f"https://github.com/login/oauth/authorize?client_id={client_id}&redirect_uri={quote(callback_url)}&scope={scope}&state={session_id}"
@@ -99,7 +101,7 @@ def callback():  # check the origin of the request?
     callback_url = (
         url_for("callback", _external=True)
         if environ["ENV"] == "production"
-        else "http://localhost:8080/callback"  # also try changing to localhost instead both here and in github settings
+        else "http://localhost:8080/callback"
     )
     data = {
         "client_id": client_id,
