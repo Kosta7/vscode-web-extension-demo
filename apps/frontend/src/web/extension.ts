@@ -21,15 +21,12 @@ export function activate(context: vscode.ExtensionContext) {
           const sessionId = await context.secrets.get("sessionId");
           if (!sessionId) return;
 
-          const response = await fetch(
-            `${apiOrigin}/repos/${"ownerId"}/${"repoId"}/files`,
-            {
-              method: "GET",
-              headers: {
-                Authorization: `Bearer ${sessionId}`,
-              },
-            }
-          );
+          const response = await fetch(`${apiOrigin}/check-authorization`, {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${sessionId}`,
+            },
+          });
           if (response.status === 200) {
             clearInterval(pollingIntervalId);
           }

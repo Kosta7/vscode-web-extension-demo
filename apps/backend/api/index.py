@@ -1,4 +1,4 @@
-from flask import Flask, url_for, jsonify, request, abort
+from flask import Flask, url_for, jsonify, request, abort, g
 from os import environ
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 from flask_cors import CORS
@@ -6,6 +6,7 @@ from urllib.parse import quote
 from uuid import uuid4
 import requests
 import boto3
+from functools import wraps
 
 
 app = Flask(__name__)
@@ -17,6 +18,7 @@ CORS(
     origins="*",
     resources={
         r"/authorize": {"methods": ["POST"]},
+        r"/check-authorization": {"methods": ["GET"]},
         r"/repos/<owner>/<repo>/files": {"methods": ["GET"]},
     },
 )
@@ -125,31 +127,51 @@ def callback():  # check the origin of the request?
     except Exception as e:
         abort(500, f"AWS Secret update failed - {str(e)}")
 
-    return ("Yes", 200)
+    return ("Authorization complete. Feel free to return to VSCode.", 200)
+
+
+def auth_wrapper(func):
+    @wraps(func)
+    def decorated_function(*args, **kwargs):
+        auth_header = request.headers.get("Authorization")
+        if not auth_header or not auth_header.startswith("Bearer "):
+            abort(401, "Authorization header not found")
+        session_id = auth_header.split(" ")[1]
+
+        try:
+            session_secret = aws_client.get_secret_value(SecretId=session_id)
+        except Exception as e:
+            abort(401, f"Unauthorized: AWS Secret fetch failed - {str(e)}")
+        if "SecretString" not in session_secret:
+            abort(401, "Unauthorized: SecretString not found")
+        access_token = session_secret["SecretString"]
+        if not access_token or access_token == "null":
+            abort(401, "Unauthorized: access_token not found")
+
+        app.logger.info(f"access_token in auth_wrapper: {access_token}")
+
+        g.access_token = access_token
+
+        return func(*args, **kwargs)
+
+    return decorated_function
+
+
+@app.route("/check-authorization")
+@auth_wrapper
+def check_authorization():
+    access_token = g.pop("access_token", None)
+    app.logger.info(f"access_token in /check-authorization: {access_token}")
+
+    if not access_token:
+        abort(401, "Unauthorized")
+
+    return ("Success", 200)
 
 
 @app.route("/repos/<owner>/<repo>/files")
 def get_repo(owner, repo):
-    auth_header = request.headers.get("Authorization")
-    if not auth_header or not auth_header.startswith("Bearer "):
-        abort(401, "Authorization header not found")
-
-    session_id = auth_header.split(" ")[1]
-
-    try:
-        session_secret = aws_client.get_secret_value(SecretId=session_id)
-    except Exception as e:
-        abort(401, f"Unauthorized: AWS Secret fetch failed - {str(e)}")
-
-    if "SecretString" not in session_secret:
-        abort(401, "Unauthorized: SecretString not found")
-
-    access_token = session_secret["SecretString"]
-
-    if not access_token or access_token == "null":
-        abort(401, "Unauthorized: access_token not found")
-
-    return access_token
+    access_token = g.pop("access_token", None)
 
     # headers = {"Authorization": f"token {access_token}"}
     # response = requests.get(
