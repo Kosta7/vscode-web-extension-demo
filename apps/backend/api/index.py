@@ -60,7 +60,7 @@ def authorize():
     callback_url = (
         url_for("callback", _external=True)
         if environ["ENV"] == "production"
-        else "http://192.168.1.18:8080/callback"  # also try changing to localhost instead both here and in github settings
+        else "http://localhost:8080/callback"  # also try changing to localhost instead both here and in github settings
     )
 
     github_auth_url = f"https://github.com/login/oauth/authorize?client_id={client_id}&redirect_uri={quote(callback_url)}&scope={scope}&state={session_id}"
@@ -99,7 +99,7 @@ def callback():  # check the origin of the request?
     callback_url = (
         url_for("callback", _external=True)
         if environ["ENV"] == "production"
-        else "http://192.168.1.18:8080/callback"  # also try changing to localhost instead both here and in github settings
+        else "http://localhost:8080/callback"  # also try changing to localhost instead both here and in github settings
     )
     data = {
         "client_id": client_id,

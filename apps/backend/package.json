@@ -4,7 +4,7 @@
   "description": "",
   "scripts": {
     "dev": "npm-run-all -s dev:localstack dev:api",
-    "dev:api": "flask run --debug --port=8080",
+    "dev:api": "flask run --debug --host=localhost --port=8080",
     "dev:localstack": "localstack start -d"
   },
   "keywords": [],
