@@ -68,15 +68,7 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
-  // const treeView = vscode.window.createTreeView("demo.explorer", {
-  //   treeDataProvider: new TreeDataProvider("", context),
-  //   showCollapseAll: true,
-  // });
-
-  context.subscriptions.push(
-    authorizeAndFetchButton
-    // treeView
-  );
+  context.subscriptions.push(authorizeAndFetchButton);
 }
 
 export function deactivate() {}

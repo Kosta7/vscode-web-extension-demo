@@ -169,23 +169,30 @@ def get_repo(owner="kosta7", repo="vscode-web-extension-demo"):
     headers = {"Authorization": f"Bearer {access_token}"}
 
     try:
-        response = requests.get(
+        repoResponse = requests.get(
             f"https://api.github.com/repos/{owner}/{repo}",
         )
-        default_branch = response.json()["default_branch"]
+        default_branch = repoResponse.json()["default_branch"]
     except Exception as e:
         abort(500, f"GitHub repo fetch failed - {str(e)}")
 
     try:
-        response = requests.get(
+        branchResponse = requests.get(
             f"https://api.github.com/repos/{owner}/{repo}/branches/{default_branch}",
             headers=headers,
         )
-        commit_sha = response.json()["commit"]["sha"]
+        head_sha = branchResponse.json()["commit"]["sha"]
     except Exception as e:
         abort(500, f"GitHub repo fetch failed - {str(e)}")
 
-    return commit_sha
+    try:
+        treeResponse = requests.get(
+            f"https://api.github.com/repos/{owner}/{repo}/git/trees/{head_sha}?recursive=1",
+            headers=headers,
+        )
+        return treeResponse.json()
+    except Exception as e:
+        abort(500, f"GitHub repo fetch failed - {str(e)}")
 
 
 if __name__ == "__main__":

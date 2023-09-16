@@ -1,16 +1,49 @@
 import * as vscode from "vscode";
 
+type TreeData = {
+  path: string;
+  sha: string;
+  type: string;
+  [key: string]: any;
+}[];
+
 export class TreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
+  private treeData: TreeData = [];
+
   constructor(
     private githubRepoUrl: string,
     private context: vscode.ExtensionContext
   ) {}
 
-  getTreeItem(element: TreeItem): vscode.TreeItem {
+  getTreeItem(element: TreeItem): TreeItem {
     return element;
   }
 
   async getChildren(element?: TreeItem): Promise<TreeItem[]> {
+    const getTreeItems = (path: string) =>
+      this.treeData
+        .filter((item) => item.path.startsWith(path))
+        .reduce((acc: TreeItem[], item) => {
+          const label = item.path
+            .replace(path, "")
+            .replace(/^\//, "") // remove a leading slash
+            .split("/")[0];
+
+          if (!label || acc.find((item) => item.label === label)) return acc;
+
+          return [
+            ...acc,
+            new TreeItem(
+              label,
+              item.path,
+              item.type === "tree"
+                ? vscode.TreeItemCollapsibleState.Collapsed
+                : vscode.TreeItemCollapsibleState.None
+            ),
+          ];
+        }, [])
+        .sort((a, b) => a.label.localeCompare(b.label));
+
     try {
       const githubUrlRegex =
         /^(https?:\/\/)?github\.com\/([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)\/?$/;
@@ -24,38 +57,35 @@ export class TreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
 
       const isRootItem = !element;
       if (isRootItem) {
-        const [, , repoOwner, repoName] =
-          this.githubRepoUrl.match(githubUrlRegex) || [];
-        if (!repoOwner || !repoName)
-          throw new Error("Invalid GitHub repository URL");
+        const getTreeData = async () => {
+          const [, , repoOwner, repoName] =
+            this.githubRepoUrl.match(githubUrlRegex) || [];
+          if (!repoOwner || !repoName)
+            throw new Error("Invalid GitHub repository URL");
 
-        const sessionId = await this.context.secrets.get("sessionId");
-        const apiUrlOrigin = this.context.globalState.get("apiUrlOrigin");
-        const response = await fetch(
-          `${apiUrlOrigin}/repos/${repoOwner}/${repoName}/files`,
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${sessionId}`,
-            },
-          }
-        );
-        const sha = await response.text();
+          // const sessionId = await this.context.secrets.get("sessionId");
+          const apiUrlOrigin = this.context.globalState.get("apiUrlOrigin");
+          const response = await fetch(
+            `${apiUrlOrigin}/repos/${repoOwner}/${repoName}/files`,
+            {
+              method: "GET",
+              // headers: {
+              //   Authorization: `Bearer ${sessionId}`,
+              // },
+            }
+          );
+          const {
+            tree,
+          }: {
+            tree: TreeData;
+          } = await response.json();
+          this.treeData = tree;
+        };
+        await getTreeData();
 
-        vscode.window.showInformationMessage(sha);
-
-        return [];
-
-        // return data.map(
-        //   (item: any) =>
-        //     new TreeItem(
-        //       item.name,
-        //       item.version,
-        //       vscode.TreeItemCollapsibleState.None
-        //     )
-        // );
+        return getTreeItems("");
       } else {
-        return []; // todo
+        return getTreeItems(element.getPath());
       }
     } catch (err) {
       vscode.window.showErrorMessage(String(err));
@@ -76,32 +106,35 @@ export class TreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
 class TreeItem extends vscode.TreeItem {
   constructor(
     public readonly label: string,
-    private version: string,
+    private readonly path: string,
     public readonly collapsibleState: vscode.TreeItemCollapsibleState
   ) {
     super(label, collapsibleState);
-    this.tooltip = `${this.label}-${this.version}`;
-    this.description = this.version;
+    this.path = path;
   }
 
-  extensionPath = vscode.extensions.getExtension("demo")?.extensionPath;
+  getPath(): string {
+    return this.path;
+  }
 
-  iconPath = {
-    light: vscode.Uri.joinPath(
-      vscode.Uri.file(this.extensionPath || ""),
-      "..",
-      "..",
-      "resources",
-      "light",
-      "dependency.svg"
-    ).fsPath,
-    dark: vscode.Uri.joinPath(
-      vscode.Uri.file(this.extensionPath || ""),
-      "..",
-      "..",
-      "resources",
-      "dark",
-      "dependency.svg"
-    ).fsPath,
-  };
+  // extensionPath = vscode.extensions.getExtension("demo")?.extensionPath;
+
+  // iconPath = {
+  //   light: vscode.Uri.joinPath(
+  //     vscode.Uri.file(this.extensionPath || ""),
+  //     "..",
+  //     "..",
+  //     "resources",
+  //     "light",
+  //     "dependency.svg"
+  //   ).fsPath,
+  //   dark: vscode.Uri.joinPath(
+  //     vscode.Uri.file(this.extensionPath || ""),
+  //     "..",
+  //     "..",
+  //     "resources",
+  //     "dark",
+  //     "dependency.svg"
+  //   ).fsPath,
+  // };
 }
