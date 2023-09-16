@@ -140,6 +140,7 @@ def auth_wrapper(func):
 
         try:
             session_secret = aws_client.get_secret_value(SecretId=session_id)
+
         except Exception as e:
             abort(401, f"Unauthorized: AWS Secret fetch failed - {str(e)}")
         if "SecretString" not in session_secret:
@@ -147,8 +148,6 @@ def auth_wrapper(func):
         access_token = session_secret["SecretString"]
         if not access_token or access_token == "null":
             abort(401, "Unauthorized: access_token not found")
-
-        app.logger.info(f"access_token in auth_wrapper: {access_token}")
 
         g.access_token = access_token
 
@@ -160,26 +159,33 @@ def auth_wrapper(func):
 @app.route("/check-authorization")
 @auth_wrapper
 def check_authorization():
-    access_token = g.pop("access_token", None)
-    app.logger.info(f"access_token in /check-authorization: {access_token}")
-
-    if not access_token:
-        abort(401, "Unauthorized")
-
     return ("Success", 200)
 
 
 @app.route("/repos/<owner>/<repo>/files")
-def get_repo(owner, repo):
+@auth_wrapper
+def get_repo(owner="kosta7", repo="vscode-web-extension-demo"):
     access_token = g.pop("access_token", None)
+    headers = {"Authorization": f"Bearer {access_token}"}
 
-    # headers = {"Authorization": f"token {access_token}"}
-    # response = requests.get(
-    #     f"https://api.github.com/repos/{owner}/{repo}/contents/",
-    #     headers=headers,
-    # )
-    # response_json = response.json()
-    # return jsonify(response_json)
+    try:
+        response = requests.get(
+            f"https://api.github.com/repos/{owner}/{repo}",
+        )
+        default_branch = response.json()["default_branch"]
+    except Exception as e:
+        abort(500, f"GitHub repo fetch failed - {str(e)}")
+
+    try:
+        response = requests.get(
+            f"https://api.github.com/repos/{owner}/{repo}/branches/{default_branch}",
+            headers=headers,
+        )
+        commit_sha = response.json()["commit"]["sha"]
+    except Exception as e:
+        abort(500, f"GitHub repo fetch failed - {str(e)}")
+
+    return commit_sha
 
 
 if __name__ == "__main__":

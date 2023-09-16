@@ -1,22 +1,65 @@
 import * as vscode from "vscode";
 
 export class TreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
-  constructor(private githubRepoUrl: string) {}
+  constructor(
+    private githubRepoUrl: string,
+    private context: vscode.ExtensionContext
+  ) {}
 
   getTreeItem(element: TreeItem): vscode.TreeItem {
     return element;
   }
 
   async getChildren(element?: TreeItem): Promise<TreeItem[]> {
-    if (!this.githubRepoUrl) {
-      vscode.window.showInformationMessage("No GitHub repository URL found");
-      return Promise.resolve([]);
-    }
+    try {
+      const githubUrlRegex =
+        /^(https?:\/\/)?github\.com\/([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)\/?$/;
+      const isGithubUrlValid = githubUrlRegex.test(this.githubRepoUrl);
 
-    if (element) {
+      if (!this.githubRepoUrl) {
+        throw new Error("Please enter a GitHub repository URL");
+      } else if (!isGithubUrlValid) {
+        throw new Error("Invalid GitHub repository URL");
+      }
+
+      const isRootItem = !element;
+      if (isRootItem) {
+        const [, , repoOwner, repoName] =
+          this.githubRepoUrl.match(githubUrlRegex) || [];
+        if (!repoOwner || !repoName)
+          throw new Error("Invalid GitHub repository URL");
+
+        const sessionId = await this.context.secrets.get("sessionId");
+        const apiUrlOrigin = this.context.globalState.get("apiUrlOrigin");
+        const response = await fetch(
+          `${apiUrlOrigin}/repos/${repoOwner}/${repoName}/files`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${sessionId}`,
+            },
+          }
+        );
+        const sha = await response.text();
+
+        vscode.window.showInformationMessage(sha);
+
+        return [];
+
+        // return data.map(
+        //   (item: any) =>
+        //     new TreeItem(
+        //       item.name,
+        //       item.version,
+        //       vscode.TreeItemCollapsibleState.None
+        //     )
+        // );
+      } else {
+        return []; // todo
+      }
+    } catch (err) {
+      vscode.window.showErrorMessage(String(err));
       return [];
-    } else {
-      return []; // for root node
     }
   }
 
