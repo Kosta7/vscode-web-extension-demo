@@ -63,15 +63,15 @@ export class TreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
           if (!repoOwner || !repoName)
             throw new Error("Invalid GitHub repository URL");
 
-          // const sessionId = await this.context.secrets.get("sessionId");
+          const sessionId = await this.context.secrets.get("sessionId");
           const apiUrlOrigin = this.context.globalState.get("apiUrlOrigin");
           const response = await fetch(
             `${apiUrlOrigin}/repos/${repoOwner}/${repoName}/files`,
             {
               method: "GET",
-              // headers: {
-              //   Authorization: `Bearer ${sessionId}`,
-              // },
+              headers: {
+                Authorization: `Bearer ${sessionId}`,
+              },
             }
           );
           const {
