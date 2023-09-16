@@ -12,8 +12,8 @@ export function activate(context: vscode.ExtensionContext) {
   const authorizeAndFetchButton = vscode.commands.registerCommand(
     "demo.authorizeAndFetch",
     async () => {
-      let checkAuthorizationIntervalId: NodeJS.Timeout;
-      const checkAuthorization = async (callback: () => void) => {
+      let pollAuthorizationStatusIntervalId: NodeJS.Timeout;
+      const pollAuthorizationStatus = async (callback: () => void) => {
         try {
           const sessionId = await context.secrets.get("sessionId");
           if (!sessionId) return;
@@ -25,7 +25,7 @@ export function activate(context: vscode.ExtensionContext) {
             },
           });
           if (response.status === 200) {
-            clearInterval(checkAuthorizationIntervalId);
+            clearInterval(pollAuthorizationStatusIntervalId);
             context.globalState.update("authorized", true);
             callback();
           }
@@ -58,8 +58,8 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.env.openExternal(vscode.Uri.parse(redirectUrl));
         context.secrets.store("sessionId", sessionId);
 
-        checkAuthorizationIntervalId = setInterval(
-          () => checkAuthorization(fetchRepositoryFiles),
+        pollAuthorizationStatusIntervalId = setInterval(
+          () => pollAuthorizationStatus(fetchRepositoryFiles),
           1000
         );
       } catch (error) {
