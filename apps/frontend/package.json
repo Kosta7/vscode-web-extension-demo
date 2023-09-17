@@ -10,28 +10,40 @@
     "Other"
   ],
   "browser": "./dist/web/extension.js",
-  "activationEvents": [],
+  "activationEvents": [
+    "*"
+  ],
   "contributes": {
     "commands": [
       {
-        "command": "demo.authorizeAndFetch",
+        "command": "authorizeAndFetch",
         "title": "Authorize & Fetch"
       }
     ],
-    "views": {
-      "explorer": [
+    "viewsContainers": {
+      "activitybar": [
         {
-          "id": "demo.explorer",
-          "name": "Github Explorer"
+          "id": "githubExplorer",
+          "title": "Github Explorer",
+          "icon": "assets/activitybarIcon.svg"
         }
       ]
     },
-    "viewsWelcome": [
-      {
-        "view": "demo.explorer",
-        "contents": "[Authorize & Fetch](command:demo.authorizeAndFetch)"
-      }
-    ]
+    "views": {
+      "githubExplorer": [
+        {
+          "type": "webview",
+          "id": "githubUrlInput",
+          "name": "Github Explorer",
+          "when": "showGithubUrlInput"
+        },
+        {
+          "id": "fileTree",
+          "name": "Github Explorer",
+          "when": "showFileTree"
+        }
+      ]
+    }
   },
   "scripts": {
     "test": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=. --extensionTestsPath=dist/web/test/suite/index.js",

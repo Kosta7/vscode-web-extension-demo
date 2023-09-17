@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 
 import { TreeDataProvider } from "./treeDataProvider";
+import { GithubUrlInputViewProvider } from "./githubUrlInputViewProvider";
 
 export function activate(context: vscode.ExtensionContext) {
   const isDevelopment = vscode.env.machineId === "someValue.machineId";
@@ -9,9 +10,14 @@ export function activate(context: vscode.ExtensionContext) {
     : "https://vscode-web-extension-demo-backend.vercel.app";
   context.globalState.update("apiUrlOrigin", apiUrlOrigin);
 
-  const authorizeAndFetchButton = vscode.commands.registerCommand(
-    "demo.authorizeAndFetch",
-    async () => {
+  const githubUrlInputView = vscode.window.registerWebviewViewProvider(
+    "githubUrlInput",
+    new GithubUrlInputViewProvider(context.extensionUri)
+  );
+
+  const authorizeAndFetchCommand = vscode.commands.registerCommand(
+    "authorizeAndFetch",
+    async (githubRepoUrl: string) => {
       let pollAuthorizationStatusIntervalId: NodeJS.Timeout;
       const pollAuthorizationStatus = async (callback: () => void) => {
         try {
@@ -35,13 +41,17 @@ export function activate(context: vscode.ExtensionContext) {
       };
 
       const fetchRepositoryFiles = () => {
-        const treeView = vscode.window.createTreeView("demo.explorer", {
-          treeDataProvider: new TreeDataProvider(
-            "https://github.com/kosta7/vscode-web-extension-demo",
-            context
-          ),
+        const treeView = vscode.window.createTreeView("fileTree", {
+          treeDataProvider: new TreeDataProvider(githubRepoUrl, context),
           showCollapseAll: true,
         });
+
+        vscode.commands.executeCommand("setContext", "showFileTree", true);
+        vscode.commands.executeCommand(
+          "setContext",
+          "showGithubUrlInput",
+          false
+        );
 
         context.subscriptions.push(treeView);
       };
@@ -68,7 +78,10 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
-  context.subscriptions.push(authorizeAndFetchButton);
+  vscode.commands.executeCommand("setContext", "showFileTree", false);
+  vscode.commands.executeCommand("setContext", "showGithubUrlInput", true);
+
+  context.subscriptions.push(githubUrlInputView, authorizeAndFetchCommand);
 }
 
 export function deactivate() {}
