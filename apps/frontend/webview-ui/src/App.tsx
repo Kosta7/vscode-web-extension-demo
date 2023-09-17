@@ -1,6 +1,5 @@
 import { vscode } from "./utilities/vscode";
 import { VSCodeButton } from "@vscode/webview-ui-toolkit/react";
-import "./App.css";
 
 function App() {
   function handleHowdyClick() {
@@ -12,7 +11,7 @@ function App() {
 
   return (
     <main>
-      <h1>Hello World!</h1>
+      <h1 className="text-3xl font-bold underline">Hello World!</h1>
       <VSCodeButton onClick={handleHowdyClick}>Howdy!</VSCodeButton>
     </main>
   );
