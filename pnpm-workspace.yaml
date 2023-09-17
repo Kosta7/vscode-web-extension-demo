@@ -1,2 +1,4 @@
 packages:
-  - "apps/*"
+  - "apps/backend"
+  - "apps/frontend"
+  - "apps/frontend/webview-ui"

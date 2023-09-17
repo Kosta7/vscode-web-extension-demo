@@ -1,5 +1,5 @@
 {
-  "name": "demo",
+  "name": "frontend",
   "displayName": "Demo",
   "description": "",
   "version": "0.0.1",
@@ -69,7 +69,7 @@
     "package-web": "webpack --mode production --devtool hidden-source-map",
     "lint": "eslint src --ext ts",
     "run-in-browser": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=. .",
-    "dev": "concurrently \"pnpm run watch-web\" \"pnpm run run-in-browser\""
+    "dev": "cd webview-ui && pnpm build && cd .. && concurrently \"pnpm run watch-web\" \"pnpm run run-in-browser\""
   },
   "devDependencies": {
     "@types/assert": "^1.5.6",

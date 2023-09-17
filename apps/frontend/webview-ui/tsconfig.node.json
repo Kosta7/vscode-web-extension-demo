@@ -1,10 +1,21 @@
 {
   "compilerOptions": {
     "composite": true,
+    "target": "esnext",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "useDefineForClassFields": true,
+    "allowJs": false,
     "skipLibCheck": true,
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "allowSyntheticDefaultImports": true
+    "esModuleInterop": false,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": false,
+    "jsx": "react-jsx"
   },
-  "include": ["vite.config.ts"]
+  "include": ["./src"]
 }

@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 
 import { TreeDataProvider } from "./treeDataProvider";
 import { GithubUrlInputViewProvider } from "./githubUrlInputViewProvider";
+import { HelloWorldPanel } from "./panels/helloWorldPanel";
 
 export function activate(context: vscode.ExtensionContext) {
   const isDevelopment = vscode.env.machineId === "someValue.machineId";
@@ -9,6 +10,16 @@ export function activate(context: vscode.ExtensionContext) {
     ? "http://localhost:8080"
     : "https://vscode-web-extension-demo-backend.vercel.app";
   context.globalState.update("apiUrlOrigin", apiUrlOrigin);
+
+  const showHelloWorldCommand = vscode.commands.registerCommand(
+    "hello-world.showHelloWorld",
+    () => {
+      HelloWorldPanel.render(context.extensionUri);
+    }
+  );
+
+  // Add command to the extension context
+  context.subscriptions.push(showHelloWorldCommand);
 
   const githubUrlInputView = vscode.window.registerWebviewViewProvider(
     "githubUrlInput",
@@ -78,13 +89,15 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
-  // const treeView = vscode.window.createTreeView("fileTree", { // TODO
+  // const treeView = vscode.window.createTreeView("fileTree", { // to not rerender each time
 
   const goToGithubUrlInputCommand = vscode.commands.registerCommand(
     "goToGithubUrlInput",
     () => {
       vscode.commands.executeCommand("setContext", "showGithubUrlInput", true);
       vscode.commands.executeCommand("setContext", "showFileTree", false);
+
+      HelloWorldPanel.render(context.extensionUri); // can it be stored in the context or something? to not rerender each time
     }
   );
 
