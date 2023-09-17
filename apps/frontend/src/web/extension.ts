@@ -11,16 +11,6 @@ export function activate(context: vscode.ExtensionContext) {
     : "https://vscode-web-extension-demo-backend.vercel.app";
   context.globalState.update("apiUrlOrigin", apiUrlOrigin);
 
-  const showHelloWorldCommand = vscode.commands.registerCommand(
-    "hello-world.showHelloWorld",
-    () => {
-      HelloWorldPanel.render(context.extensionUri);
-    }
-  );
-
-  // Add command to the extension context
-  context.subscriptions.push(showHelloWorldCommand);
-
   const githubUrlInputView = vscode.window.registerWebviewViewProvider(
     "githubUrlInput",
     new GithubUrlInputViewProvider(context.extensionUri)
