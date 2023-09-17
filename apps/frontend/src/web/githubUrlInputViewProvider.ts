@@ -47,19 +47,38 @@ export class GithubUrlInputViewProvider implements vscode.WebviewViewProvider {
         <title>Authorize & Fetch</title>
     </head>
     <body>
-        <input id="githubRepoUrl" type="text" placeholder="GitHub repo URL...">
-        <button id="authorizeAndFetch">Authorize & Fetch</button>
+        <div style="display:flex; flex-direction:column; gap:0.4rem;">
+            <input
+                id="githubRepoUrl"
+                type="text"
+                placeholder="Enter a GitHub repo URL..."
+                style="height:24px; box-sizing:border-box; font-size:13px; background-color:rgba(255,255,255,70%); border:1px solid #cecece; font-family:-apple-system,BlinkMacSystemFont,sans-serif;"
+            >
+            <button
+                id="authorizeAndFetch"
+                style="height:24px; border:none; color:white; cursor:pointer; background-color:rgba(0,0,0,50%); border:1px solid rgba(100,100,100,50%); font-family:-apple-system,BlinkMacSystemFont,sans-serif;"
+            >
+                Authorize & Fetch
+            </button>
+        </div>
 
         <script defer nonce="jZaLVeSrOifiXOkJ">
             const vscode = acquireVsCodeApi();
             const button = document.getElementById('authorizeAndFetch');
             const input = document.getElementById('githubRepoUrl');
 
-            button.addEventListener('click', () => {
+            const authorizeAndFetch = () => {
                 vscode.postMessage({
                     command: 'authorizeAndFetch',
                     githubRepoUrl: input.value
                 });
+            }
+            button.addEventListener('click', authorizeAndFetch);
+            input.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') authorizeAndFetch();
+            });
+            document.addEventListener('DOMContentLoaded', function() {
+                input.focus();
             });
         </script>
     </body>
