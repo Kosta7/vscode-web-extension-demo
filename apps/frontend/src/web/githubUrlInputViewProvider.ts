@@ -51,7 +51,7 @@ export class GithubUrlInputViewProvider implements vscode.WebviewViewProvider {
             <input
                 id="githubRepoUrl"
                 type="text"
-                placeholder="Enter a GitHub repo URL..."
+                placeholder="Paste a GitHub Repo URL"
                 style="height:24px; box-sizing:border-box; font-size:13px; background-color:rgba(255,255,255,70%); border:1px solid #cecece; font-family:-apple-system,BlinkMacSystemFont,sans-serif;"
             >
             <button

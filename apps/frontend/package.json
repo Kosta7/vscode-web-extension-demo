@@ -18,6 +18,11 @@
       {
         "command": "authorizeAndFetch",
         "title": "Authorize & Fetch"
+      },
+      {
+        "command": "goToGithubUrlInput",
+        "title": "Choose Another Repository",
+        "icon": "assets/backIcon.svg"
       }
     ],
     "viewsContainers": {
@@ -41,6 +46,15 @@
           "id": "fileTree",
           "name": "Github Explorer",
           "when": "showFileTree"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "goToGithubUrlInput",
+          "when": "view == fileTree",
+          "group": "navigation"
         }
       ]
     }

@@ -78,10 +78,24 @@ export function activate(context: vscode.ExtensionContext) {
     }
   );
 
-  vscode.commands.executeCommand("setContext", "showFileTree", false);
-  vscode.commands.executeCommand("setContext", "showGithubUrlInput", true);
+  // const treeView = vscode.window.createTreeView("fileTree", { // TODO
 
-  context.subscriptions.push(githubUrlInputView, authorizeAndFetchCommand);
+  const goToGithubUrlInputCommand = vscode.commands.registerCommand(
+    "goToGithubUrlInput",
+    () => {
+      vscode.commands.executeCommand("setContext", "showGithubUrlInput", true);
+      vscode.commands.executeCommand("setContext", "showFileTree", false);
+    }
+  );
+
+  vscode.commands.executeCommand("setContext", "showGithubUrlInput", true);
+  vscode.commands.executeCommand("setContext", "showFileTree", false);
+
+  context.subscriptions.push(
+    githubUrlInputView,
+    authorizeAndFetchCommand,
+    goToGithubUrlInputCommand
+  );
 }
 
 export function deactivate() {}

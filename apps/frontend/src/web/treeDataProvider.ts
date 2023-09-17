@@ -64,6 +64,23 @@ export class TreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
             throw new Error("Invalid GitHub repository URL");
 
           const sessionId = await this.context.secrets.get("sessionId");
+          const cachedTreeData:
+            | { treeData: TreeData; expiryDate: Date }
+            | undefined = this.context.globalState.get(this.githubRepoUrl);
+          if (cachedTreeData) {
+            const isExpired =
+              new Date().getTime() > cachedTreeData.expiryDate.getTime();
+            if (isExpired) {
+              await this.context.globalState.update(
+                this.githubRepoUrl,
+                undefined
+              );
+            } else {
+              this.treeData = cachedTreeData.treeData;
+              return;
+            }
+          }
+
           const apiUrlOrigin = this.context.globalState.get("apiUrlOrigin");
           const response = await fetch(
             `${apiUrlOrigin}/repos/${repoOwner}/${repoName}/files`,
@@ -75,11 +92,16 @@ export class TreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
             }
           );
           const {
-            tree,
+            tree: treeData,
           }: {
             tree: TreeData;
           } = await response.json();
-          this.treeData = tree;
+
+          await this.context.globalState.update(this.githubRepoUrl, {
+            treeData,
+            expiryDate: new Date().getTime() + 1000 * 60 * 60 * 24, // 24h from now
+          });
+          this.treeData = treeData;
         };
         await getTreeData();
 
