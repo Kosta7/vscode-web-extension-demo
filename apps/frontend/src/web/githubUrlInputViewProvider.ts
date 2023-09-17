@@ -23,6 +23,14 @@ export class GithubUrlInputViewProvider implements vscode.WebviewViewProvider {
     };
 
     webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
+
+    webviewView.webview.onDidReceiveMessage((message) => {
+      switch (message.command) {
+        case "hello":
+          vscode.window.showInformationMessage(message.text);
+          break;
+      }
+    });
   }
 
   private _getHtmlForWebview(webview: vscode.Webview): string {
