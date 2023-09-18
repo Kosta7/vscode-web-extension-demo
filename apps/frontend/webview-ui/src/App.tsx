@@ -14,10 +14,9 @@ function App() {
       const githubUrlRegex =
         /^(https?:\/\/)?github\.com\/([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)\/?$/;
       const isGithubUrlValid = githubUrlRegex.test(githubRepoUrl);
-      if (!isGithubUrlValid) throw new Error("Invalid GitHub repository URL");
       const [, , repoOwner, repoName] =
         githubRepoUrl.match(githubUrlRegex) || [];
-      if (!repoOwner || !repoName)
+      if (!isGithubUrlValid || !repoOwner || !repoName)
         throw new Error("Invalid GitHub repository URL");
 
       vscode.postMessage({ command, payload: `${repoOwner}/${repoName}` });
@@ -33,6 +32,7 @@ function App() {
         placeholder="Paste a GitHub Repo URL"
         onChange={(e) => setGithubRepoUrl((e.target as HTMLInputElement).value)}
         onKeyDown={(e) => e.key === "Enter" && onSubmitUrl()}
+        onPaste={(e) => setGithubRepoUrl(e.clipboardData.getData("Text"))}
       />
       <VSCodeButton onClick={onSubmitUrl} appearance="primary">
         Authorize & Fetch
