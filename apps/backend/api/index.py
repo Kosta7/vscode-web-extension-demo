@@ -7,6 +7,7 @@ from uuid import uuid4
 import requests
 import boto3
 from functools import wraps
+import base64
 
 
 app = Flask(__name__)
@@ -20,6 +21,7 @@ CORS(
         r"/authorize": {"methods": ["POST"]},
         r"/check-authorization": {"methods": ["GET"]},
         r"/repos/<owner>/<repo>/files": {"methods": ["GET"]},
+        r"/repos/<owner>/<repo>/files/<path:file_path>": {"methods": ["GET"]},
     },
 )
 
@@ -172,6 +174,7 @@ def get_repo(owner="kosta7", repo="vscode-web-extension-demo"):
         repoResponse = requests.get(
             f"https://api.github.com/repos/{owner}/{repo}",
         )
+        repoResponse.raise_for_status()
         default_branch = repoResponse.json()["default_branch"]
     except Exception as e:
         abort(500, f"GitHub repo fetch failed - {str(e)}")
@@ -181,6 +184,7 @@ def get_repo(owner="kosta7", repo="vscode-web-extension-demo"):
             f"https://api.github.com/repos/{owner}/{repo}/branches/{default_branch}",
             headers=headers,
         )
+        branchResponse.raise_for_status()
         head_sha = branchResponse.json()["commit"]["sha"]
     except Exception as e:
         abort(500, f"GitHub repo fetch failed - {str(e)}")
@@ -190,9 +194,38 @@ def get_repo(owner="kosta7", repo="vscode-web-extension-demo"):
             f"https://api.github.com/repos/{owner}/{repo}/git/trees/{head_sha}?recursive=1",
             headers=headers,
         )
+        treeResponse.raise_for_status()
         return treeResponse.json()
     except Exception as e:
         abort(500, f"GitHub repo fetch failed - {str(e)}")
+
+
+@app.route("/repos/<owner>/<repo>/files/<path:file_path>")
+# @auth_wrapper
+def get_file_content(owner, repo, file_path):
+    # access_token = g.access_token
+    headers = {
+        # "Authorization": f"Bearer {access_token}",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
+
+    try:
+        response = requests.get(
+            f"https://api.github.com/repos/{owner}/{repo}/contents/{file_path}",
+            headers=headers,
+        )
+        response.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        abort(500, f"GitHub file fetch failed - {str(e)}")
+
+    if response.status_code == 200:
+        try:
+            content = base64.b64decode(response.json()["content"]).decode("utf-8")
+            return content
+        except (KeyError, TypeError, ValueError) as e:
+            abort(500, f"Error processing file content - {str(e)}")
+
+    return abort(404, "File not found")
 
 
 if __name__ == "__main__":

@@ -8,66 +8,55 @@ type TreeData = {
 }[];
 
 export class TreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
-  private repo: string = "";
-  private repoName: string = "";
   private treeData: TreeData = [];
 
-  constructor(
-    repo: string,
-    private context: vscode.ExtensionContext
-  ) {
-    this.repo = repo;
-  }
+  constructor(private context: vscode.ExtensionContext) {}
 
   getTreeItem(element: TreeItem): TreeItem {
     return element;
   }
 
+  getParent(element: TreeItem): TreeItem | null {
+    return element.parent || null;
+  }
+
   async getChildren(element?: TreeItem): Promise<TreeItem[]> {
-    const getTreeItems = (path: string) =>
-      this.treeData
-        .filter((item) => item.path.startsWith(path))
-        .reduce((acc: TreeItem[], item) => {
-          const label = item.path
-            .replace(path, "")
-            .replace(/^\//, "") // remove a leading slash
-            .split("/")[0];
-
-          if (!label || acc.find((item) => item.label === label)) return acc;
-
-          return [
-            ...acc,
-            new TreeItem(
-              label,
-              item.path,
-              item.type === "tree"
-                ? vscode.TreeItemCollapsibleState.Collapsed
-                : vscode.TreeItemCollapsibleState.None
-            ),
-          ];
-        }, [])
-        .sort((a, b) => a.label.localeCompare(b.label));
-
     try {
-      if (!this.repo) {
-        throw new Error("Error getting repository name or owner");
-      }
+      const repo = this.context.globalState.get("repo") as string;
+      if (!repo) throw new Error("Error getting repository name or owner");
+
+      const getTreeItems = (parentPath: string) =>
+        this.treeData
+          .filter((item) => item.path.startsWith(parentPath))
+          .reduce((acc: TreeItem[], item) => {
+            const label = item.path
+              .replace(parentPath, "")
+              .replace(/^\//, "") // remove a leading slash
+              .split("/")[0];
+
+            const itemPath = "/" + item.path;
+
+            if (!label || acc.find((item) => item.label === label)) return acc;
+
+            return [
+              ...acc,
+              new TreeItem(label, itemPath, item.type == "tree", element),
+            ];
+          }, [])
+          .sort((a, b) => a.label.localeCompare(b.label));
 
       const isRootItem = !element;
       if (isRootItem) {
         const getTreeData = async () => {
           const cachedTreeData:
             | { treeData: TreeData; expiryDate: Date }
-            | undefined = this.context.globalState.get(this.repo);
+            | undefined = this.context.globalState.get(repo);
           if (cachedTreeData) {
             const isExpired =
               new Date().getTime() >
               new Date(cachedTreeData.expiryDate).getTime();
             if (isExpired) {
-              await this.context.globalState.update(
-                this.githubRepoUrl,
-                undefined
-              );
+              await this.context.globalState.update(repo, undefined);
             } else {
               this.treeData = cachedTreeData.treeData;
               return;
@@ -90,7 +79,7 @@ export class TreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
             tree: TreeData;
           } = await response.json();
 
-          await this.context.globalState.update(this.repo, {
+          await this.context.globalState.update(repo, {
             treeData,
             expiryDate: new Date().getTime() + 1000 * 60 * 60 * 24, // 24h from now
           });
@@ -100,32 +89,35 @@ export class TreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
 
         return getTreeItems("");
       } else {
-        return getTreeItems(element.getPath());
+        return getTreeItems(element.getPath().replace(/^\//, ""));
       }
     } catch (err) {
       vscode.window.showErrorMessage(String(err));
       return [];
     }
   }
-
-  private async pathExists(p: string): Promise<boolean> {
-    try {
-      // try fetching the repo
-    } catch (err) {
-      return false;
-    }
-    return true;
-  }
 }
 
-class TreeItem extends vscode.TreeItem {
+export class TreeItem extends vscode.TreeItem {
   constructor(
     public readonly label: string,
     private readonly path: string,
-    public readonly collapsibleState: vscode.TreeItemCollapsibleState
+    public readonly isDirectory: boolean,
+    public readonly parent?: TreeItem
   ) {
+    const collapsibleState: vscode.TreeItemCollapsibleState = isDirectory
+      ? vscode.TreeItemCollapsibleState.Collapsed
+      : vscode.TreeItemCollapsibleState.None;
     super(label, collapsibleState);
     this.path = path;
+    this.parent = parent;
+    if (!isDirectory) {
+      this.command = {
+        command: "openFile",
+        title: "Fetch and open file",
+        arguments: [this],
+      };
+    }
   }
 
   getPath(): string {
