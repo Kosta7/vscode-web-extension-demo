@@ -17,7 +17,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   const authorizeAndFetchCommand = vscode.commands.registerCommand(
     "authorizeAndFetch",
-    async (githubRepoUrl: string) => {
+    async (repo: string) => {
       let pollAuthorizationStatusIntervalId: NodeJS.Timeout;
       const pollAuthorizationStatus = async (callback: () => void) => {
         try {
@@ -36,13 +36,13 @@ export function activate(context: vscode.ExtensionContext) {
             callback();
           }
         } catch (error) {
-          console.error(error);
+          vscode.window.showErrorMessage(String(error));
         }
       };
 
       const fetchRepositoryFiles = () => {
         const treeView = vscode.window.createTreeView("fileTree", {
-          treeDataProvider: new TreeDataProvider(githubRepoUrl, context),
+          treeDataProvider: new TreeDataProvider(repo, context),
           showCollapseAll: true,
         });
 

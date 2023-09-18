@@ -24,10 +24,11 @@ export class GithubUrlInputViewProvider implements vscode.WebviewViewProvider {
 
     webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
 
-    webviewView.webview.onDidReceiveMessage((message) => {
-      switch (message.command) {
-        case "hello":
-          vscode.window.showInformationMessage(message.text);
+    webviewView.webview.onDidReceiveMessage(({ command, payload, error }) => {
+      switch (command) {
+        case "submit-repo":
+          if (error) vscode.window.showErrorMessage(error);
+          else vscode.commands.executeCommand("authorizeAndFetch", payload);
           break;
       }
     });

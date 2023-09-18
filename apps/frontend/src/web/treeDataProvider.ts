@@ -8,12 +8,16 @@ type TreeData = {
 }[];
 
 export class TreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
+  private repo: string = "";
+  private repoName: string = "";
   private treeData: TreeData = [];
 
   constructor(
-    private githubRepoUrl: string,
+    repo: string,
     private context: vscode.ExtensionContext
-  ) {}
+  ) {
+    this.repo = repo;
+  }
 
   getTreeItem(element: TreeItem): TreeItem {
     return element;
@@ -45,27 +49,16 @@ export class TreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
         .sort((a, b) => a.label.localeCompare(b.label));
 
     try {
-      const githubUrlRegex =
-        /^(https?:\/\/)?github\.com\/([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)\/?$/;
-      const isGithubUrlValid = githubUrlRegex.test(this.githubRepoUrl);
-
-      if (!this.githubRepoUrl) {
-        throw new Error("Please enter a GitHub repository URL");
-      } else if (!isGithubUrlValid) {
-        throw new Error("Invalid GitHub repository URL");
+      if (!this.repo) {
+        throw new Error("Error getting repository name or owner");
       }
 
       const isRootItem = !element;
       if (isRootItem) {
         const getTreeData = async () => {
-          const [, , repoOwner, repoName] =
-            this.githubRepoUrl.match(githubUrlRegex) || [];
-          if (!repoOwner || !repoName)
-            throw new Error("Invalid GitHub repository URL");
-
           const cachedTreeData:
             | { treeData: TreeData; expiryDate: Date }
-            | undefined = this.context.globalState.get(this.githubRepoUrl);
+            | undefined = this.context.globalState.get(this.repo);
           if (cachedTreeData) {
             const isExpired =
               new Date().getTime() >
@@ -83,7 +76,7 @@ export class TreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
 
           const apiUrlOrigin = this.context.globalState.get("apiUrlOrigin");
           const response = await fetch(
-            `${apiUrlOrigin}/repos/${repoOwner}/${repoName}/files`,
+            `${apiUrlOrigin}/repos/${this.repo}/files`,
             {
               method: "GET",
               headers: {
@@ -97,7 +90,7 @@ export class TreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
             tree: TreeData;
           } = await response.json();
 
-          await this.context.globalState.update(this.githubRepoUrl, {
+          await this.context.globalState.update(this.repo, {
             treeData,
             expiryDate: new Date().getTime() + 1000 * 60 * 60 * 24, // 24h from now
           });
