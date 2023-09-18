@@ -7,3 +7,5 @@ flask-cors==4.0.0
 localstack==2.2.0
 awscli-local==0.21
 boto3==1.28.47
+upstash-redis==0.15.0
+upstash-ratelimit==0.5.1

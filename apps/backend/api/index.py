@@ -1,17 +1,18 @@
-from flask import Flask, url_for, jsonify, request, abort, g
+from flask import url_for, jsonify, request, abort, g
 from os import environ
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 from flask_cors import CORS
 from urllib.parse import quote
 from uuid import uuid4
 import requests
-import boto3
-from functools import wraps
 import base64
 
+from app import app
+from ratelimit import ratelimit
+from auth import auth
+from aws_client import aws_client
 
-app = Flask(__name__)
-app.secret_key = environ["SECRET_KEY"]
+serializer = URLSafeTimedSerializer(environ["SECRET_KEY"])
 
 
 CORS(
@@ -34,32 +35,20 @@ def add_cors_headers(response):
     return response
 
 
-aws_session = boto3.session.Session()
-aws_client = aws_session.client(
-    service_name="secretsmanager",
-    region_name=environ["MY_AWS_REGION_NAME"],
-    aws_access_key_id=environ["MY_AWS_ACCESS_KEY_ID"],
-    aws_secret_access_key=environ["MY_AWS_SECRET_ACCESS_KEY"],
-    endpoint_url=environ["MY_AWS_ENDPOINT_URL"]
-    if environ["ENV"] == "development"
-    else None,
-)
-
-serializer = URLSafeTimedSerializer(environ["SECRET_KEY"])
-
-
-@app.route("/")
+@app.route("/", methods=["GET"])
+@ratelimit("guest")
 def hello_world():
     return "Hello, World!"
 
 
 @app.route("/authorize", methods=["POST"])
+@ratelimit("guest")
 def authorize():
     try:
         session_id = serializer.dumps(str(uuid4()))
         aws_client.create_secret(Name=session_id, SecretString="null")
     except Exception as e:
-        abort(500, f"AWS Secret creation failed - {str(e)}")
+        abort(500, "Unknown error")
 
     client_id = environ["GITHUB_CLIENT_ID"]
     scope = "public_repo"
@@ -68,7 +57,6 @@ def authorize():
         if environ["ENV"] == "production"
         else "http://localhost:8080/callback"
     )
-
     github_auth_url = f"https://github.com/login/oauth/authorize?client_id={client_id}&redirect_uri={quote(callback_url)}&scope={scope}&state={session_id}"
 
     return jsonify(
@@ -79,7 +67,8 @@ def authorize():
     )
 
 
-@app.route("/callback")
+@app.route("/callback", methods=["GET"])
+@ratelimit("guest")
 def callback():  # check the origin of the request?
     state = request.args.get("state", "")
     code = request.args.get("code", "")
@@ -95,10 +84,9 @@ def callback():  # check the origin of the request?
     try:
         session_secret = aws_client.get_secret_value(SecretId=state)
     except Exception as e:
-        abort(401, f"Unauthorized: AWS Secret fetch failed - {str(e)}")
-
+        abort(500, "Unknown error")
     if "SecretString" not in session_secret:
-        abort(401, "Invalid state")
+        abort(500, "Session not found")
 
     client_id = environ["GITHUB_CLIENT_ID"]
     client_secret = environ["GITHUB_CLIENT_SECRET"]
@@ -119,93 +107,87 @@ def callback():  # check the origin of the request?
         response = requests.post(
             "https://github.com/login/oauth/access_token", data=data, headers=headers
         )
+        response.raise_for_status()
+    except requests.HTTPError as e:
+        abort(e.response.status_code, str(e))
     except Exception as e:
-        abort(401, f"GitHub access token fetch failed - {str(e)}")
+        abort(500, "Unknown error")
 
     access_token = response.json().get("access_token")
+    if not access_token:
+        abort(500, "Access token not found")
 
     try:
         aws_client.put_secret_value(SecretId=state, SecretString=access_token)
     except Exception as e:
-        abort(500, f"AWS Secret update failed - {str(e)}")
+        abort(500, "Unknown error")
 
     return ("Authorization complete. Feel free to return to VSCode.", 200)
 
 
-def auth_wrapper(func):
-    @wraps(func)
-    def decorated_function(*args, **kwargs):
-        auth_header = request.headers.get("Authorization")
-        if not auth_header or not auth_header.startswith("Bearer "):
-            abort(401, "Authorization header not found")
-        session_id = auth_header.split(" ")[1]
-
-        try:
-            session_secret = aws_client.get_secret_value(SecretId=session_id)
-
-        except Exception as e:
-            abort(401, f"Unauthorized: AWS Secret fetch failed - {str(e)}")
-        if "SecretString" not in session_secret:
-            abort(401, "Unauthorized: SecretString not found")
-        access_token = session_secret["SecretString"]
-        if not access_token or access_token == "null":
-            abort(401, "Unauthorized: access_token not found")
-
-        g.access_token = access_token
-
-        return func(*args, **kwargs)
-
-    return decorated_function
-
-
-@app.route("/check-authorization")
-@auth_wrapper
+@app.route("/check-authorization", methods=["GET"])
+@ratelimit("polling")
+@auth
 def check_authorization():
     return ("Success", 200)
 
 
-@app.route("/repos/<owner>/<repo>/files")
-@auth_wrapper
-def get_repo(owner="kosta7", repo="vscode-web-extension-demo"):
+@app.route("/repos/<owner>/<repo>/files", methods=["GET"])
+@ratelimit("authorized")
+@auth
+def get_repo(owner, repo):
     access_token = g.pop("access_token", None)
+    access_token = "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"
     headers = {"Authorization": f"Bearer {access_token}"}
 
     try:
-        repoResponse = requests.get(
+        repo_response = requests.get(
             f"https://api.github.com/repos/{owner}/{repo}",
         )
-        repoResponse.raise_for_status()
-        default_branch = repoResponse.json()["default_branch"]
+        repo_response.raise_for_status()
+    except requests.HTTPError as e:
+        abort(e.response.status_code, str(e))
+    try:
+        default_branch = repo_response.json()["default_branch"]
     except Exception as e:
-        abort(500, f"GitHub repo fetch failed - {str(e)}")
+        abort(500, "Unknown error")
 
     try:
-        branchResponse = requests.get(
+        branch_response = requests.get(
             f"https://api.github.com/repos/{owner}/{repo}/branches/{default_branch}",
             headers=headers,
         )
-        branchResponse.raise_for_status()
-        head_sha = branchResponse.json()["commit"]["sha"]
+        branch_response.raise_for_status()
+    except requests.HTTPError as e:
+        abort(e.response.status_code, str(e))
+    try:
+        head_sha = branch_response.json()["commit"]["sha"]
     except Exception as e:
-        abort(500, f"GitHub repo fetch failed - {str(e)}")
+        abort(500, "Unknown error")
 
     try:
-        treeResponse = requests.get(
+        tree_response = requests.get(
             f"https://api.github.com/repos/{owner}/{repo}/git/trees/{head_sha}?recursive=1",
             headers=headers,
         )
-        treeResponse.raise_for_status()
-        return treeResponse.json()
+        tree_response.raise_for_status()
+    except requests.HTTPError as e:
+        abort(e.response.status_code, str(e))
+    try:
+        file_tree = tree_response.json()
     except Exception as e:
-        abort(500, f"GitHub repo fetch failed - {str(e)}")
+        abort(500, "Unknown error")
+
+    return file_tree
 
 
-@app.route("/repos/<owner>/<repo>/files/<path:file_path>")
-# @auth_wrapper
+@app.route("/repos/<owner>/<repo>/files/<path:file_path>", methods=["GET"])
+@ratelimit("authorized")
+@auth
 def get_file_content(owner, repo, file_path):
-    # access_token = g.access_token
+    access_token = g.access_token
     headers = {
-        # "Authorization": f"Bearer {access_token}",
+        "Authorization": f"Bearer {access_token}",
         "X-GitHub-Api-Version": "2022-11-28",
     }
 
@@ -215,17 +197,15 @@ def get_file_content(owner, repo, file_path):
             headers=headers,
         )
         response.raise_for_status()
-    except requests.exceptions.RequestException as e:
-        abort(500, f"GitHub file fetch failed - {str(e)}")
+    except Exception as e:
+        abort(500, "Unknown error")
 
-    if response.status_code == 200:
-        try:
-            content = base64.b64decode(response.json()["content"]).decode("utf-8")
-            return content
-        except (KeyError, TypeError, ValueError) as e:
-            abort(500, f"Error processing file content - {str(e)}")
+    try:
+        content = base64.b64decode(response.json()["content"]).decode("utf-8")
+    except Exception as e:
+        abort(500, "Unknown error")
 
-    return abort(404, "File not found")
+    return content
 
 
 if __name__ == "__main__":
