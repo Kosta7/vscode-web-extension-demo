@@ -10,15 +10,18 @@ export class FileContentProvider implements vscode.TextDocumentContentProvider {
       try {
         const apiUrlOrigin = this.context.globalState.get("apiUrlOrigin");
         const repo = this.context.globalState.get("repo");
-        const path = this.context.globalState.get("path");
-        // const sessionId = await this.context.secrets.get("sessionId");
+        const path = String(this.context.globalState.get("path")).replace(
+          /^\//,
+          ""
+        );
+        const sessionId = await this.context.secrets.get("sessionId");
         const response = await fetch(
           `${apiUrlOrigin}/repos/${repo}/files/${path}`,
           {
             method: "GET",
-            // headers: {
-            //   Authorization: `Bearer ${sessionId}`,
-            // },
+            headers: {
+              Authorization: `Bearer ${sessionId}`,
+            },
           }
         );
         if (!response.ok)
