@@ -6,8 +6,7 @@
     "dev": "npm-run-all secrets --parallel watch-redis watch-api",
     "secrets": "localstack start -d",
     "watch-redis": "docker run -p 6379:6379 redis/redis-stack:latest",
-    "watch-api": "cross-env FLASK_ENV=development FLASK_APP=api/index.py flask run --debug --host=localhost --port=8080",
-    "build": "turbo run build"
+    "watch-api": "cross-env FLASK_ENV=development FLASK_APP=api/index.py flask run --debug --host=localhost --port=8080"
   },
   "keywords": [],
   "author": "",
