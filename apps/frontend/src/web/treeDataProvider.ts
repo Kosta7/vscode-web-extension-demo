@@ -63,16 +63,14 @@ export class TreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
             }
           }
 
+          const sessionId = await this.context.secrets.get("sessionId");
           const apiUrlOrigin = this.context.globalState.get("apiUrlOrigin");
-          const response = await fetch(
-            `${apiUrlOrigin}/repos/${this.repo}/files`,
-            {
-              method: "GET",
-              headers: {
-                Authorization: `Bearer ${sessionId}`,
-              },
-            }
-          );
+          const response = await fetch(`${apiUrlOrigin}/repos/${repo}/files`, {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${sessionId}`,
+            },
+          });
           const {
             tree: treeData,
           }: {
