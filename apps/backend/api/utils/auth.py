@@ -1,9 +1,9 @@
 from flask import request, abort, g
 from functools import wraps
 
-from aws_client import aws_client
-from get_session_id import get_session_id
-from app import app
+from utils.aws_client import aws_client
+from utils.get_session_id import get_session_id
+from utils.app import app
 
 
 def auth(func):

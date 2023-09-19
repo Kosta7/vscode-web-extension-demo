@@ -8,11 +8,11 @@ import requests
 import base64
 import json
 
-from app import app
-from ratelimit import ratelimit
-from auth import auth
-from aws_client import aws_client
-from redis_instance import redis
+from utils.app import app
+from utils.ratelimit import ratelimit
+from utils.auth import auth
+from utils.aws_client import aws_client
+from utils.redis_instance import redis
 
 serializer = URLSafeTimedSerializer(environ["SECRET_KEY"])
 

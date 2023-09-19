@@ -4,9 +4,9 @@ from upstash_ratelimit import Ratelimit, FixedWindow, TokenBucket
 from typing import Literal
 from os import environ
 
-from redis_instance import redis
-from get_session_id import get_session_id
-from app import app
+from utils.redis_instance import redis
+from utils.get_session_id import get_session_id
+from utils.app import app
 
 
 RateLimitType = Literal["guest", "authorized", "polling"]
