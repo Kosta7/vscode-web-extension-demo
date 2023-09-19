@@ -6,11 +6,13 @@ from urllib.parse import quote
 from uuid import uuid4
 import requests
 import base64
+import json
 
 from app import app
 from ratelimit import ratelimit
 from auth import auth
 from aws_client import aws_client
+from redis_instance import redis
 
 serializer = URLSafeTimedSerializer(environ["SECRET_KEY"])
 
@@ -48,6 +50,7 @@ def authorize():
         session_id = serializer.dumps(str(uuid4()))
         aws_client.create_secret(Name=session_id, SecretString="null")
     except Exception as e:
+        app.logger.error(e)
         abort(500, "Unknown error")
 
     client_id = environ["GITHUB_CLIENT_ID"]
@@ -84,6 +87,7 @@ def callback():  # check the origin of the request?
     try:
         session_secret = aws_client.get_secret_value(SecretId=state)
     except Exception as e:
+        app.logger.error(e)
         abort(500, "Unknown error")
     if "SecretString" not in session_secret:
         abort(500, "Session not found")
@@ -102,7 +106,6 @@ def callback():  # check the origin of the request?
         "redirect_uri": callback_url,
     }
     headers = {"Accept": "application/json"}
-
     try:
         response = requests.post(
             "https://github.com/login/oauth/access_token", data=data, headers=headers
@@ -111,6 +114,7 @@ def callback():  # check the origin of the request?
     except requests.HTTPError as e:
         abort(e.response.status_code, str(e))
     except Exception as e:
+        app.logger.error(e)
         abort(500, "Unknown error")
 
     access_token = response.json().get("access_token")
@@ -120,6 +124,7 @@ def callback():  # check the origin of the request?
     try:
         aws_client.put_secret_value(SecretId=state, SecretString=access_token)
     except Exception as e:
+        app.logger.error(e)
         abort(500, "Unknown error")
 
     return ("Authorization complete. Feel free to return to VSCode.", 200)
@@ -136,13 +141,22 @@ def check_authorization():
 @ratelimit("authorized")
 @auth
 def get_repo(owner, repo):
-    access_token = g.pop("access_token", None)
-    access_token = "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"
-    headers = {"Authorization": f"Bearer {access_token}"}
+    try:
+        cache_path = f"{owner}/{repo}"
+        content = redis.get(cache_path)
+        if content:
+            content = json.loads(content.decode("utf-8"))
+    except Exception as e:
+        app.logger.error(e)
+    if content:
+        return content
 
+    access_token = g.pop("access_token", None)
+    headers = {"Authorization": f"Bearer {access_token}"}
     try:
         repo_response = requests.get(
             f"https://api.github.com/repos/{owner}/{repo}",
+            headers=headers,
         )
         repo_response.raise_for_status()
     except requests.HTTPError as e:
@@ -150,6 +164,7 @@ def get_repo(owner, repo):
     try:
         default_branch = repo_response.json()["default_branch"]
     except Exception as e:
+        app.logger.error(e)
         abort(500, "Unknown error")
 
     try:
@@ -163,6 +178,7 @@ def get_repo(owner, repo):
     try:
         head_sha = branch_response.json()["commit"]["sha"]
     except Exception as e:
+        app.logger.error(e)
         abort(500, "Unknown error")
 
     try:
@@ -176,7 +192,14 @@ def get_repo(owner, repo):
     try:
         file_tree = tree_response.json()
     except Exception as e:
+        app.logger.error(e)
         abort(500, "Unknown error")
+
+    try:
+        redis.set(cache_path, json.dumps(file_tree))
+        redis.expire(cache_path, 60 * 60 * 24)  # 24 hours
+    except Exception as e:
+        app.logger.error(e)
 
     return file_tree
 
@@ -185,12 +208,19 @@ def get_repo(owner, repo):
 @ratelimit("authorized")
 @auth
 def get_file_content(owner, repo, file_path):
+    try:
+        cache_path = f"{owner}/{repo}/{file_path}"
+        content = redis.get(cache_path)
+    except Exception as e:
+        app.logger.error(e)
+    if content:
+        return content
+
     access_token = g.access_token
     headers = {
         "Authorization": f"Bearer {access_token}",
         "X-GitHub-Api-Version": "2022-11-28",
     }
-
     try:
         response = requests.get(
             f"https://api.github.com/repos/{owner}/{repo}/contents/{file_path}",
@@ -198,12 +228,20 @@ def get_file_content(owner, repo, file_path):
         )
         response.raise_for_status()
     except Exception as e:
+        app.logger.error(e)
         abort(500, "Unknown error")
 
     try:
         content = base64.b64decode(response.json()["content"]).decode("utf-8")
     except Exception as e:
+        app.logger.error(e)
         abort(500, "Unknown error")
+
+    try:
+        redis.set(cache_path, content)
+        redis.expire(cache_path, 60 * 60 * 24)  # 24 hours
+    except Exception as e:
+        app.logger.error(e)
 
     return content
 

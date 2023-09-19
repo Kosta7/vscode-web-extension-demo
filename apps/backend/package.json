@@ -3,9 +3,10 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "dev": "npm-run-all -s dev:localstack dev:api",
-    "dev:localstack": "localstack start -d",
-    "dev:api": "cross-env FLASK_ENV=development FLASK_APP=api/index.py flask run --debug --host=localhost --port=8080"
+    "dev": "npm-run-all secrets --parallel watch-redis watch-api",
+    "secrets": "localstack start -d",
+    "watch-redis": "docker run -p 6379:6379 redis/redis-stack:latest",
+    "watch-api": "cross-env FLASK_ENV=development FLASK_APP=api/index.py flask run --debug --host=localhost --port=8080"
   },
   "keywords": [],
   "author": "",

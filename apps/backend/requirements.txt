@@ -9,3 +9,4 @@ awscli-local==0.21
 boto3==1.28.47
 upstash-redis==0.15.0
 upstash-ratelimit==0.5.1
+redis==5.0.0

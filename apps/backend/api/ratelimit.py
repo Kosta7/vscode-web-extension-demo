@@ -2,6 +2,7 @@ from flask import request, abort
 from functools import wraps
 from upstash_ratelimit import Ratelimit, FixedWindow, TokenBucket
 from typing import Literal
+from os import environ
 
 from redis_instance import redis
 from get_session_id import get_session_id
@@ -33,6 +34,11 @@ def ratelimit(type: RateLimitType):
     def actual_decorator(func):
         @wraps(func)
         def decorated_function(*args, **kwargs):
+            if environ["ENV"] == "development":
+                return func(
+                    *args, **kwargs
+                )  # todo: don't skip rate limiting in development
+
             try:
                 ratelimit = ratelimiters[type]
                 identifier = (
@@ -40,6 +46,7 @@ def ratelimit(type: RateLimitType):
                 )
                 response = ratelimit.limit(identifier)
             except Exception as e:
+                app.logger.error(e)
                 abort(500, "Unknown error")
 
             if not response.allowed:
