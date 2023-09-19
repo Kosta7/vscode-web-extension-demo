@@ -30,9 +30,10 @@ function App() {
       <VSCodeTextField
         autoFocus={true}
         placeholder="Paste a GitHub Repo URL"
-        onChange={(e) => setGithubRepoUrl((e.target as HTMLInputElement).value)}
+        // onChange={(e) => setGithubRepoUrl((e.target as HTMLInputElement).value)}
+        // onPaste={(e) => setGithubRepoUrl(e.clipboardData.getData("Text"))}
+        onInput={(e) => setGithubRepoUrl((e.target as HTMLInputElement).value)}
         onKeyDown={(e) => e.key === "Enter" && onSubmitUrl()}
-        onPaste={(e) => setGithubRepoUrl(e.clipboardData.getData("Text"))}
       />
       <VSCodeButton onClick={onSubmitUrl} appearance="primary">
         Authorize & Fetch
