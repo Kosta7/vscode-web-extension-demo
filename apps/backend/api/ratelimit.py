@@ -13,17 +13,17 @@ RateLimitType = Literal["guest", "authorized", "polling"]
 ratelimiters: dict[str, RateLimitType] = {
     "guest": Ratelimit(
         redis=redis,
-        limiter=FixedWindow(max_requests=25, window=50),
+        limiter=FixedWindow(max_requests=25, window=50, unit="s"),
         prefix="guest-ratelimit",
     ),
     "authorized": Ratelimit(
         redis=redis,
-        limiter=FixedWindow(max_requests=100, window=50),
+        limiter=FixedWindow(max_requests=5000, window=1, unit="h"),
         prefix="authorized-ratelimit",
     ),
     "polling": Ratelimit(
         redis=redis,
-        limiter=TokenBucket(max_tokens=2, refill_rate=1, interval=1),
+        limiter=TokenBucket(max_tokens=2, refill_rate=1, interval=1, unit="s"),
         prefix="polling-ratelimit",
     ),
 }
