@@ -8,16 +8,12 @@ import requests
 import base64
 import json
 
-from ratelimit import ratelimit
-from auth import auth
-from aws_client import aws_client
-from redis_instance import redis
+from .app import app
+from .ratelimit import ratelimit
+from .auth import auth
+from .aws_client import aws_client
+from .redis_instance import redis
 
-from flask import Flask
-
-
-app = Flask(__name__)
-app.secret_key = environ["SECRET_KEY"]
 
 serializer = URLSafeTimedSerializer(environ["SECRET_KEY"])
 
