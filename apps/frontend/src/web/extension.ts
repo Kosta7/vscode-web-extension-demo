@@ -5,6 +5,10 @@ import { GithubUrlInputViewProvider } from "./githubUrlInputViewProvider";
 import { FileContentProvider } from "./fileContentProvider";
 
 export function activate(context: vscode.ExtensionContext) {
+  vscode.window.showInformationMessage(
+    "Hello World from vscode-web-extension!"
+  );
+
   const isDevelopment = vscode.env.machineId === "someValue.machineId";
   const apiUrlOrigin = isDevelopment
     ? "http://localhost:8080"
@@ -74,6 +78,12 @@ export function activate(context: vscode.ExtensionContext) {
           () => pollAuthorizationStatus(fetchRepositoryFiles),
           1000
         );
+        setTimeout(
+          () => {
+            clearInterval(pollAuthorizationStatusIntervalId);
+          },
+          60 * 60 * 10
+        ); // 10 minutes
       } catch (error) {
         vscode.window.showErrorMessage(String(error));
       }
