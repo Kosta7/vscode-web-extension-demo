@@ -15,9 +15,10 @@ export function activate(context: vscode.ExtensionContext) {
     : "https://vscode-web-extension-demo-backend.vercel.app";
   context.globalState.update("apiUrlOrigin", apiUrlOrigin);
 
+  const githubUrlInputViewProvider = new GithubUrlInputViewProvider(context);
   const githubUrlInputView = vscode.window.registerWebviewViewProvider(
     "githubUrlInput",
-    new GithubUrlInputViewProvider(context.extensionUri)
+    githubUrlInputViewProvider
   );
 
   const treeView = vscode.window.createTreeView("fileTree", {
@@ -29,6 +30,7 @@ export function activate(context: vscode.ExtensionContext) {
     "authorizeAndFetch",
     async (repo: string) => {
       context.globalState.update("repo", repo);
+
       let pollAuthorizationStatusIntervalId: NodeJS.Timeout;
       const pollAuthorizationStatus = async (callback: () => void) => {
         try {
@@ -44,6 +46,7 @@ export function activate(context: vscode.ExtensionContext) {
           if (response.status === 200) {
             clearInterval(pollAuthorizationStatusIntervalId);
             context.globalState.update("authorized", true);
+            githubUrlInputViewProvider.setIsUserAuthorized(true);
             callback();
           }
         } catch (error) {

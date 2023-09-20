@@ -3,10 +3,11 @@ import {
   VSCodeButton,
   VSCodeTextField,
 } from "@vscode/webview-ui-toolkit/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 function App() {
-  const [githubRepoUrl, setGithubRepoUrl] = useState("");
+  const [githubRepoUrl, setGithubRepoUrl] = useState<string>("");
+  const [isAuthorized, setIsAuthorized] = useState<boolean>(false);
 
   const onSubmitUrl = () => {
     const command = "submit-repo";
@@ -25,18 +26,31 @@ function App() {
     }
   };
 
+  useEffect(() => {
+    setIsAuthorized(
+      !!document.getElementById("is-authorized")?.getAttribute("is-authorized")
+    );
+
+    const isAuthorizedListener = (event: MessageEvent) => {
+      const { command, payload, error } = event.data;
+      if (error) return;
+      else if (command === "is-authorized") setIsAuthorized(payload);
+    };
+    window.addEventListener("message", isAuthorizedListener);
+
+    return () => window.removeEventListener("message", isAuthorizedListener);
+  }, []);
+
   return (
     <main className="flex flex-col gap-1">
       <VSCodeTextField
         autoFocus={true}
         placeholder="Paste a GitHub Repo URL"
-        // onChange={(e) => setGithubRepoUrl((e.target as HTMLInputElement).value)}
-        // onPaste={(e) => setGithubRepoUrl(e.clipboardData.getData("Text"))}
         onInput={(e) => setGithubRepoUrl((e.target as HTMLInputElement).value)}
         onKeyDown={(e) => e.key === "Enter" && onSubmitUrl()}
       />
       <VSCodeButton onClick={onSubmitUrl} appearance="primary">
-        Authorize & Fetch
+        {isAuthorized ? "Fetch" : "Authorize & Fetch"}
       </VSCodeButton>
     </main>
   );
