@@ -3,6 +3,7 @@
   "displayName": "Demo",
   "description": "",
   "version": "0.0.1",
+  "publisher": "kosta7",
   "engines": {
     "vscode": "^1.82.0"
   },

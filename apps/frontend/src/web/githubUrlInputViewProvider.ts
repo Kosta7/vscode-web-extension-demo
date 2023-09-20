@@ -19,7 +19,14 @@ export class GithubUrlInputViewProvider implements vscode.WebviewViewProvider {
 
     webviewView.webview.options = {
       enableScripts: true,
-      localResourceRoots: [vscode.Uri.joinPath(this._extensionUri, "media")],
+      localResourceRoots: [
+        vscode.Uri.joinPath(
+          this._extensionUri,
+          "webview-ui",
+          "build",
+          "assets"
+        ),
+      ],
     };
 
     webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
