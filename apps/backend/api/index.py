@@ -20,7 +20,7 @@ serializer = URLSafeTimedSerializer(environ["SECRET_KEY"])
 
 CORS(
     app,
-    origins="*",
+    origins=environ.get("CORS_ORIGINS", "*"),
     resources={
         r"/authorize": {"methods": ["POST"]},
         r"/check-authorization": {"methods": ["GET"]},
