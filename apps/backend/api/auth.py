@@ -1,4 +1,4 @@
-from flask import request, abort, g, redirect, url_for
+from flask import request, abort, g
 from functools import wraps
 
 from .aws_client import aws_client
@@ -17,7 +17,7 @@ def auth(func):
             session_secret = aws_client.get_secret_value(SecretId=session_id)
         except Exception as e:
             app.logger.error(e)
-            return redirect(url_for("authorize"))
+            abort(401, "Unknown error")
 
         if "SecretString" not in session_secret:
             abort(401, "No session found")
