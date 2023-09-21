@@ -45,9 +45,9 @@ export function activate(context: vscode.ExtensionContext) {
             },
           });
           if (response.status === 200) {
-            clearInterval(pollAuthorizationStatusIntervalId);
             context.globalState.update("isAuthorized", true);
             callback();
+            clearInterval(pollAuthorizationStatusIntervalId);
           }
         } catch (error) {
           vscode.window.showErrorMessage(String(error));
