@@ -1,16 +1,16 @@
 import * as vscode from "vscode";
 
-import { getUri } from "./utilities/getUri";
-import { getNonce } from "./utilities/getNonce";
+import { getUri } from "../utilities/getUri";
+import { getNonce } from "../utilities/getNonce";
 
 export class GithubUrlInputViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "myWebviewView";
 
   private _view?: vscode.WebviewView;
 
-  private _extensionContext: vscode.ExtensionContext;
+  constructor(private _extensionContext?: vscode.ExtensionContext) {}
 
-  constructor(context: vscode.ExtensionContext) {
+  setContext(context: vscode.ExtensionContext) {
     this._extensionContext = context;
   }
 
@@ -19,6 +19,10 @@ export class GithubUrlInputViewProvider implements vscode.WebviewViewProvider {
     context: vscode.WebviewViewResolveContext,
     _token: vscode.CancellationToken
   ) {
+    if (!this._extensionContext) {
+      throw new Error("No extension context in a provider");
+    }
+
     this._view = webviewView;
 
     this._view.webview.options = {
@@ -64,6 +68,10 @@ export class GithubUrlInputViewProvider implements vscode.WebviewViewProvider {
     webview: vscode.Webview,
     context: vscode.WebviewViewResolveContext
   ): string {
+    if (!this._extensionContext) {
+      throw new Error("No extension context in a provider");
+    }
+
     const scriptUri = getUri(webview, this._extensionContext.extensionUri, [
       "webview-ui",
       "build",

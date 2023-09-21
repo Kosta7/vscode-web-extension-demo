@@ -1,27 +1,39 @@
 import * as vscode from "vscode";
 
+import { authorizedFetch } from "../utilities/authorizedFetch";
+import { apiUrlOrigin } from "../utilities/constants";
+
 export class FileContentProvider implements vscode.TextDocumentContentProvider {
   onDidChange?: vscode.Event<vscode.Uri>;
 
-  constructor(private context: vscode.ExtensionContext) {}
+  constructor(private _extensionContext?: vscode.ExtensionContext) {}
+
+  setContext(context: vscode.ExtensionContext) {
+    this._extensionContext = context;
+  }
 
   async provideTextDocumentContent(uri: vscode.Uri): Promise<string> {
+    if (!this._extensionContext) {
+      throw new Error("No extension context in a provider");
+    }
+
     if (uri.scheme === "github-files") {
       try {
-        const apiUrlOrigin = this.context.globalState.get("apiUrlOrigin");
-        const repoId = this.context.globalState.get("repoId");
-        const path = String(this.context.globalState.get("path")).replace(
-          /^\//,
-          ""
-        );
-        const sessionId = await this.context.secrets.get("sessionId");
-        const response = await fetch(
+        const repoId = this._extensionContext.globalState.get("repoId");
+        const path = String(
+          this._extensionContext.globalState.get("path")
+        ).replace(/^\//, "");
+        const sessionId = await this._extensionContext.secrets.get("sessionId");
+        const response = await authorizedFetch(
           `${apiUrlOrigin}/repos/${repoId}/files/${path}`,
           {
             method: "GET",
             headers: {
               Authorization: `Bearer ${sessionId}`,
             },
+          },
+          () => {
+            console.log("onUnauthorized");
           }
         );
         if (!response.ok)

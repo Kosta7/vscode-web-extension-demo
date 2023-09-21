@@ -1,11 +1,15 @@
 import * as vscode from "vscode";
 
-import { getTreeData, type TreeData } from "./utilities/getTreeData";
+import { getTreeData, type TreeData } from "../utilities/getTreeData";
 
 export class TreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
   private treeData: TreeData = [];
 
-  constructor(private context: vscode.ExtensionContext) {}
+  constructor(private _extensionContext?: vscode.ExtensionContext) {}
+
+  setContext(context: vscode.ExtensionContext) {
+    this._extensionContext = context;
+  }
 
   getTreeItem(element: TreeItem): TreeItem {
     return element;
@@ -57,10 +61,14 @@ export class TreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
   > = this._onDidChangeTreeData.event;
 
   async refresh(): Promise<void> {
+    if (!this._extensionContext) {
+      throw new Error("No extension context in a provider");
+    }
+
     this.treeData = [];
     this._onDidChangeTreeData.fire();
 
-    this.treeData = await getTreeData(this.context);
+    this.treeData = await getTreeData(this._extensionContext);
     this._onDidChangeTreeData.fire();
   }
 }

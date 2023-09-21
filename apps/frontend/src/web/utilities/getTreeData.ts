@@ -1,5 +1,8 @@
 import * as vscode from "vscode";
 
+import { authorizedFetch } from "./authorizedFetch";
+import { apiUrlOrigin } from "../utilities/constants";
+
 export type TreeData = {
   path: string;
   sha: string;
@@ -24,13 +27,18 @@ export const getTreeData = async (context: vscode.ExtensionContext) => {
   }
 
   const sessionId = await context.secrets.get("sessionId");
-  const apiUrlOrigin = context.globalState.get("apiUrlOrigin");
-  const response = await fetch(`${apiUrlOrigin}/repos/${repoId}/files`, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${sessionId}`,
+  const response = await authorizedFetch(
+    `${apiUrlOrigin}/repos/${repoId}/files`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${sessionId}`,
+      },
     },
-  });
+    () => {
+      console.log("onUnauthorized");
+    }
+  );
   const {
     tree: treeData,
   }: {

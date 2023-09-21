@@ -13,7 +13,7 @@ function App() {
     setIsAuthorized(
       document
         .getElementById("is-authorized")
-        ?.getAttribute("is-authorized") === "true"
+        ?.getAttribute("is-authorized") === "true" // todo: refactor
     );
 
     const isAuthorizedListener = (event: MessageEvent) => {
