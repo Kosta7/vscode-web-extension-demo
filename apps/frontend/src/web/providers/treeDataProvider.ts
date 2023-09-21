@@ -60,13 +60,17 @@ export class TreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
     TreeItem | undefined | null | void
   > = this._onDidChangeTreeData.event;
 
+  async empty(): Promise<void> {
+    this.treeData = [];
+    this._onDidChangeTreeData.fire();
+  }
+
   async refresh(): Promise<void> {
     if (!this._extensionContext) {
       throw new Error("No extension context in a provider");
     }
 
-    this.treeData = [];
-    this._onDidChangeTreeData.fire();
+    this.empty();
 
     this.treeData = await getTreeData(this._extensionContext);
     this._onDidChangeTreeData.fire();

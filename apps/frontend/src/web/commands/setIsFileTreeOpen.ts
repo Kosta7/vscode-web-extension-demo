@@ -12,6 +12,7 @@ export const setIsFileTreeOpen = (
     treeView.title = context.globalState.get("repoId");
   } else {
     vscode.commands.executeCommand("setContext", "showFileTree", false);
+    treeDataProvider.empty();
     treeView.title = "";
   }
 };
