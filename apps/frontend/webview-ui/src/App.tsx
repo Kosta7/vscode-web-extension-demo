@@ -45,13 +45,19 @@ function App() {
   return (
     <main className="flex flex-col gap-1">
       <VSCodeTextField
-        placeholder="Paste a GitHub Repo URL"
+        placeholder="GitHub Repository URL"
         onInput={(e) => setGithubRepoUrl((e.target as HTMLInputElement).value)}
         onKeyDown={(e) => e.key === "Enter" && onSubmitUrl()}
       />
-      <VSCodeButton onClick={onSubmitUrl} className="mb-4" appearance="primary">
-        {isAuthorized ? "Fetch" : "Authorize & Fetch"}
-      </VSCodeButton>
+      {githubRepoUrl ? (
+        <VSCodeButton
+          onClick={onSubmitUrl}
+          className="mb-4"
+          appearance="primary"
+        >
+          {isAuthorized ? "Fetch" : "Authorize & Fetch"}
+        </VSCodeButton>
+      ) : null}
     </main>
   );
 }

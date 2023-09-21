@@ -15,6 +15,12 @@ export function activate(context: vscode.ExtensionContext) {
     : "https://vscode-web-extension-demo-backend.vercel.app";
   context.globalState.update("apiUrlOrigin", apiUrlOrigin);
 
+  const setIsAuthorized = (isAuthorized: boolean) => {
+    context.globalState.update("isAuthorized", isAuthorized);
+    githubUrlInputViewProvider.setIsUserAuthorized(isAuthorized);
+    vscode.commands.executeCommand("setContext", "isAuthorized", isAuthorized);
+  };
+
   const githubUrlInputViewProvider = new GithubUrlInputViewProvider(context);
   const githubUrlInputView = vscode.window.registerWebviewViewProvider(
     "githubUrlInput",
@@ -45,8 +51,7 @@ export function activate(context: vscode.ExtensionContext) {
             },
           });
           if (response.status === 200) {
-            context.globalState.update("isAuthorized", true);
-            vscode.commands.executeCommand("setContext", "isAuthorized", true);
+            setIsAuthorized(true);
             callback();
             clearInterval(pollAuthorizationStatusIntervalId);
           }
@@ -55,7 +60,7 @@ export function activate(context: vscode.ExtensionContext) {
         }
       };
 
-      const showRepo = () => {
+      const showFileTree = () => {
         treeView.title = repoId;
         vscode.commands.executeCommand("setContext", "showFileTree", true);
         treeDataProvider.refresh();
@@ -79,7 +84,7 @@ export function activate(context: vscode.ExtensionContext) {
           context.secrets.store("sessionId", sessionId);
 
           pollAuthorizationStatusIntervalId = setInterval(
-            () => pollAuthorizationStatus(showRepo),
+            () => pollAuthorizationStatus(showFileTree),
             1000
           );
           setTimeout(
@@ -94,7 +99,7 @@ export function activate(context: vscode.ExtensionContext) {
       };
 
       if (context.globalState.get("isAuthorized")) {
-        showRepo();
+        showFileTree();
       } else {
         authorize();
       }
@@ -125,10 +130,8 @@ export function activate(context: vscode.ExtensionContext) {
       } catch (error) {
         vscode.window.showErrorMessage(String(error));
       } finally {
-        context.globalState.update("isAuthorized", false);
-        githubUrlInputViewProvider.setIsUserAuthorized(false);
+        setIsAuthorized(false);
         vscode.commands.executeCommand("setContext", "showFileTree", false);
-        vscode.commands.executeCommand("setContext", "isAuthorized", false);
         context.secrets.delete("sessionId");
       }
     }
