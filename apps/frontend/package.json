@@ -41,7 +41,7 @@
           "type": "webview",
           "id": "githubUrlInput",
           "name": "Github Explorer",
-          "when": "showGithubUrlInput"
+          "when": "!showFileTree"
         },
         {
           "id": "fileTree",

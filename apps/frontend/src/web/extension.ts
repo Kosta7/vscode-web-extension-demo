@@ -21,15 +21,16 @@ export function activate(context: vscode.ExtensionContext) {
     githubUrlInputViewProvider
   );
 
+  const treeDataProvider = new TreeDataProvider(context);
   const treeView = vscode.window.createTreeView("fileTree", {
-    treeDataProvider: new TreeDataProvider(context),
+    treeDataProvider,
     showCollapseAll: true,
   });
 
   const authorizeAndFetchCommand = vscode.commands.registerCommand(
     "authorizeAndFetch",
-    async (repo: string) => {
-      context.globalState.update("repo", repo);
+    async (repoId: string) => {
+      context.globalState.update("repoId", repoId);
 
       let pollAuthorizationStatusIntervalId: NodeJS.Timeout;
       const pollAuthorizationStatus = async (callback: () => void) => {
@@ -45,8 +46,7 @@ export function activate(context: vscode.ExtensionContext) {
           });
           if (response.status === 200) {
             clearInterval(pollAuthorizationStatusIntervalId);
-            context.globalState.update("authorized", true);
-            githubUrlInputViewProvider.setIsUserAuthorized(true);
+            context.globalState.update("isAuthorized", true);
             callback();
           }
         } catch (error) {
@@ -54,51 +54,54 @@ export function activate(context: vscode.ExtensionContext) {
         }
       };
 
-      const fetchRepositoryFiles = () => {
+      const showRepo = () => {
         vscode.commands.executeCommand("setContext", "showFileTree", true);
-        vscode.commands.executeCommand(
-          "setContext",
-          "showGithubUrlInput",
-          false
-        );
-
+        treeDataProvider.refresh();
         context.subscriptions.push(treeView);
       };
 
-      try {
-        const authorizationResponse = await fetch(`${apiUrlOrigin}/authorize`, {
-          method: "POST",
-        });
-        const { redirect_url: redirectUrl, session_id: sessionId } =
-          await authorizationResponse.json();
-        if (!redirectUrl || !sessionId)
-          throw new Error("Invalid response from the server");
+      const authorize = async () => {
+        try {
+          const authorizationResponse = await fetch(
+            `${apiUrlOrigin}/authorize`,
+            {
+              method: "POST",
+            }
+          );
+          const { redirect_url: redirectUrl, session_id: sessionId } =
+            await authorizationResponse.json();
+          if (!redirectUrl || !sessionId)
+            throw new Error("Invalid response from the server");
 
-        vscode.env.openExternal(vscode.Uri.parse(redirectUrl));
-        context.secrets.store("sessionId", sessionId);
+          vscode.env.openExternal(vscode.Uri.parse(redirectUrl));
+          context.secrets.store("sessionId", sessionId);
 
-        pollAuthorizationStatusIntervalId = setInterval(
-          () => pollAuthorizationStatus(fetchRepositoryFiles),
-          1000
-        );
-        setTimeout(
-          () => {
-            clearInterval(pollAuthorizationStatusIntervalId);
-          },
-          60 * 60 * 10
-        ); // 10 minutes
-      } catch (error) {
-        vscode.window.showErrorMessage(String(error));
+          pollAuthorizationStatusIntervalId = setInterval(
+            () => pollAuthorizationStatus(showRepo),
+            1000
+          );
+          setTimeout(
+            () => {
+              clearInterval(pollAuthorizationStatusIntervalId);
+            },
+            60 * 60 * 10
+          ); // 10 minutes
+        } catch (error) {
+          vscode.window.showErrorMessage(String(error));
+        }
+      };
+
+      if (context.globalState.get("isAuthorized")) {
+        showRepo();
+      } else {
+        authorize();
       }
     }
   );
 
-  // const treeView = vscode.window.createTreeView("fileTree", { // to not rerender each time
-
   const goToGithubUrlInputCommand = vscode.commands.registerCommand(
     "goToGithubUrlInput",
     () => {
-      vscode.commands.executeCommand("setContext", "showGithubUrlInput", true);
       vscode.commands.executeCommand("setContext", "showFileTree", false);
     }
   );

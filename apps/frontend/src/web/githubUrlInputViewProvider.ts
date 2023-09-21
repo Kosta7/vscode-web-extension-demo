@@ -48,15 +48,6 @@ export class GithubUrlInputViewProvider implements vscode.WebviewViewProvider {
     });
   }
 
-  public setIsUserAuthorized(isAuthorized: boolean): void {
-    if (!this._view) return;
-
-    this._view.webview.postMessage({
-      command: "is-authorized",
-      payload: isAuthorized,
-    });
-  }
-
   private _getHtmlForWebview(
     webview: vscode.Webview,
     context: vscode.WebviewViewResolveContext
@@ -76,6 +67,9 @@ export class GithubUrlInputViewProvider implements vscode.WebviewViewProvider {
 
     const nonce = getNonce();
 
+    const isAuthorized =
+      !!this._extensionContext.globalState.get("isAuthorized");
+
     // Tip: Install the es6-string-html VS Code extension to enable code highlighting below
     return `
       <!DOCTYPE html>
@@ -83,12 +77,8 @@ export class GithubUrlInputViewProvider implements vscode.WebviewViewProvider {
         <head>
           <meta charset="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${
-            webview.cspSource
-          }; script-src 'nonce-${nonce}';">
-          <meta id="is-authorized" is-authorized=${this._extensionContext.globalState.get(
-            "authorized"
-          )} />
+          <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
+          <meta id="is-authorized" is-authorized=${isAuthorized} />
           <link rel="stylesheet" type="text/css" href="${stylesUri}">
           <title>Hello World</title>
         </head>

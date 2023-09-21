@@ -27,9 +27,11 @@ function App() {
   };
 
   useEffect(() => {
-    setIsAuthorized(
-      !!document.getElementById("is-authorized")?.getAttribute("is-authorized")
-    );
+    const isAuthorizedFromExtension =
+      document
+        .getElementById("is-authorized")
+        ?.getAttribute("is-authorized") === "true";
+    setIsAuthorized(isAuthorizedFromExtension);
 
     const isAuthorizedListener = (event: MessageEvent) => {
       const { command, payload, error } = event.data;
@@ -37,7 +39,6 @@ function App() {
       else if (command === "is-authorized") setIsAuthorized(payload);
     };
     window.addEventListener("message", isAuthorizedListener);
-
     return () => window.removeEventListener("message", isAuthorizedListener);
   }, []);
 

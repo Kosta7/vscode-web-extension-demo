@@ -9,14 +9,14 @@ export class FileContentProvider implements vscode.TextDocumentContentProvider {
     if (uri.scheme === "github-files") {
       try {
         const apiUrlOrigin = this.context.globalState.get("apiUrlOrigin");
-        const repo = this.context.globalState.get("repo");
+        const repoId = this.context.globalState.get("repoId");
         const path = String(this.context.globalState.get("path")).replace(
           /^\//,
           ""
         );
         const sessionId = await this.context.secrets.get("sessionId");
         const response = await fetch(
-          `${apiUrlOrigin}/repos/${repo}/files/${path}`,
+          `${apiUrlOrigin}/repos/${repoId}/files/${path}`,
           {
             method: "GET",
             headers: {
