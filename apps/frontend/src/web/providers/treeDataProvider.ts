@@ -1,9 +1,11 @@
 import * as vscode from "vscode";
 
 import { getTreeData, type TreeData } from "../utilities/getTreeData";
+import { LEADING_SLASH } from "../utilities/constants";
 
 export class TreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
   private treeData: TreeData = [];
+  private treeItems: Map<string, TreeItem> = new Map();
 
   constructor(private _extensionContext?: vscode.ExtensionContext) {}
 
@@ -13,6 +15,10 @@ export class TreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
 
   getTreeItem(element: TreeItem): TreeItem {
     return element;
+  }
+
+  getTreeItemByPath(path: string): TreeItem | undefined {
+    return this.treeItems.get(path);
   }
 
   getParent(element: TreeItem): TreeItem | null {
@@ -27,17 +33,22 @@ export class TreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
           .reduce((acc: TreeItem[], item) => {
             const label = item.path
               .replace(parentPath, "")
-              .replace(/^\//, "") // remove a leading slash
+              .replace(LEADING_SLASH, "") // without a leading slash
               .split("/")[0];
 
             const itemPath = "/" + item.path;
 
             if (!label || acc.find((item) => item.label === label)) return acc;
 
-            return [
-              ...acc,
-              new TreeItem(label, itemPath, item.type == "tree", element),
-            ];
+            const treeItem = new TreeItem(
+              label,
+              itemPath,
+              item.type == "tree",
+              element
+            );
+            this.treeItems.set(itemPath, treeItem);
+
+            return [...acc, treeItem];
           }, [])
           .sort((a, b) => a.label.localeCompare(b.label));
 
@@ -45,7 +56,9 @@ export class TreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
       if (isRootItem) {
         return instantiateChildren("");
       } else {
-        return instantiateChildren(element.getPath().replace(/^\//, ""));
+        return instantiateChildren(
+          element.getPath().replace(LEADING_SLASH, "")
+        );
       }
     } catch (err) {
       vscode.window.showErrorMessage(String(err));

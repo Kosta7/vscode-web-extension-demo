@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 
-import { TreeItem, treeView } from "../providers";
+import { TreeItem } from "../providers";
 
 export const openFile = async (
   context: vscode.ExtensionContext,
@@ -13,14 +13,9 @@ export const openFile = async (
     const uri = vscode.Uri.parse(`github-files://${path}`);
     const document = await vscode.workspace.openTextDocument(uri);
     await vscode.window.showTextDocument(document, {
-      preview: true,
+      preview: false,
       viewColumn: vscode.ViewColumn.One,
       preserveFocus: false,
-    });
-
-    await treeView.reveal(treeItem, {
-      select: true,
-      focus: false,
     });
   } catch (error) {
     vscode.window.showErrorMessage(String(error));

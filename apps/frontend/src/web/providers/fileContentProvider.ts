@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 
 import { authorizedFetch } from "../utilities/authorizedFetch";
-import { apiUrlOrigin } from "../utilities/constants";
+import { apiUrlOrigin, LEADING_SLASH } from "../utilities/constants";
 
 export class FileContentProvider implements vscode.TextDocumentContentProvider {
   onDidChange?: vscode.Event<vscode.Uri>;
@@ -22,7 +22,7 @@ export class FileContentProvider implements vscode.TextDocumentContentProvider {
         const repoId = this._extensionContext.globalState.get("repoId");
         const path = String(
           this._extensionContext.globalState.get("path")
-        ).replace(/^\//, "");
+        ).replace(LEADING_SLASH, "");
         const sessionId = await this._extensionContext.secrets.get("sessionId");
         const response = await authorizedFetch(
           `${apiUrlOrigin}/repos/${repoId}/files/${path}`,
