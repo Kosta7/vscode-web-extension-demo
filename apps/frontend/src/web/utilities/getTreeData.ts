@@ -35,9 +35,7 @@ export const getTreeData = async (context: vscode.ExtensionContext) => {
         Authorization: `Bearer ${sessionId}`,
       },
     },
-    () => {
-      console.log("onUnauthorized");
-    }
+    context
   );
   const {
     tree: treeData,

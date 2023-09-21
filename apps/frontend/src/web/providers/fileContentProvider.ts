@@ -32,9 +32,7 @@ export class FileContentProvider implements vscode.TextDocumentContentProvider {
               Authorization: `Bearer ${sessionId}`,
             },
           },
-          () => {
-            console.log("onUnauthorized");
-          }
+          this._extensionContext
         );
         if (!response.ok)
           throw new Error(
