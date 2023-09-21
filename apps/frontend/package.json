@@ -24,6 +24,11 @@
         "command": "goToGithubUrlInput",
         "title": "Choose Another Repository",
         "icon": "assets/backIcon.svg"
+      },
+      {
+        "command": "unauthorize",
+        "title": "Unauthorize",
+        "icon": "assets/unauthorizeIcon.svg"
       }
     ],
     "viewsContainers": {
@@ -55,6 +60,11 @@
         {
           "command": "goToGithubUrlInput",
           "when": "view == fileTree",
+          "group": "navigation"
+        },
+        {
+          "command": "unauthorize",
+          "when": "view != fileTree && isAuthorized == true",
           "group": "navigation"
         }
       ]

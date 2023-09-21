@@ -46,6 +46,7 @@ export function activate(context: vscode.ExtensionContext) {
           });
           if (response.status === 200) {
             context.globalState.update("isAuthorized", true);
+            vscode.commands.executeCommand("setContext", "isAuthorized", true);
             callback();
             clearInterval(pollAuthorizationStatusIntervalId);
           }
@@ -84,7 +85,7 @@ export function activate(context: vscode.ExtensionContext) {
             () => {
               clearInterval(pollAuthorizationStatusIntervalId);
             },
-            60 * 60 * 10
+            1000 * 60 * 10
           ); // 10 minutes
         } catch (error) {
           vscode.window.showErrorMessage(String(error));
@@ -103,6 +104,31 @@ export function activate(context: vscode.ExtensionContext) {
     "goToGithubUrlInput",
     () => {
       vscode.commands.executeCommand("setContext", "showFileTree", false);
+    }
+  );
+
+  const unauthorizeCommand = vscode.commands.registerCommand(
+    "unauthorize",
+    async () => {
+      const sessionId = await context.secrets.get("sessionId");
+      if (!sessionId) return;
+
+      try {
+        await fetch(`${apiUrlOrigin}/unauthorize`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${sessionId}`,
+          },
+        });
+      } catch (error) {
+        vscode.window.showErrorMessage(String(error));
+      } finally {
+        context.globalState.update("isAuthorized", false);
+        githubUrlInputViewProvider.setIsUserAuthorized(false);
+        vscode.commands.executeCommand("setContext", "showFileTree", false);
+        vscode.commands.executeCommand("setContext", "isAuthorized", false);
+        context.secrets.delete("sessionId");
+      }
     }
   );
 
@@ -135,7 +161,8 @@ export function activate(context: vscode.ExtensionContext) {
     githubUrlInputView,
     authorizeAndFetchCommand,
     goToGithubUrlInputCommand,
-    openFileCommand
+    openFileCommand,
+    unauthorizeCommand
   );
 
   vscode.commands.executeCommand("setContext", "showGithubUrlInput", true);

@@ -44,7 +44,19 @@ export class GithubUrlInputViewProvider implements vscode.WebviewViewProvider {
           if (error) vscode.window.showErrorMessage(error);
           else vscode.commands.executeCommand("authorizeAndFetch", payload);
           break;
+        case "unauthorize":
+          vscode.commands.executeCommand("unauthorize");
+          break;
       }
+    });
+  }
+
+  public setIsUserAuthorized(isAuthorized: boolean): void {
+    if (!this._view) return;
+
+    this._view.webview.postMessage({
+      command: "is-authorized",
+      payload: isAuthorized,
     });
   }
 

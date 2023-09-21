@@ -9,6 +9,22 @@ function App() {
   const [githubRepoUrl, setGithubRepoUrl] = useState<string>("");
   const [isAuthorized, setIsAuthorized] = useState<boolean>(false);
 
+  useEffect(() => {
+    setIsAuthorized(
+      document
+        .getElementById("is-authorized")
+        ?.getAttribute("is-authorized") === "true"
+    );
+
+    const isAuthorizedListener = (event: MessageEvent) => {
+      const { command, payload, error } = event.data;
+      if (error) return;
+      else if (command === "is-authorized") setIsAuthorized(payload);
+    };
+    window.addEventListener("message", isAuthorizedListener);
+    return () => window.removeEventListener("message", isAuthorizedListener);
+  }, []);
+
   const onSubmitUrl = () => {
     const command = "submit-repo";
     try {
@@ -26,31 +42,14 @@ function App() {
     }
   };
 
-  useEffect(() => {
-    const isAuthorizedFromExtension =
-      document
-        .getElementById("is-authorized")
-        ?.getAttribute("is-authorized") === "true";
-    setIsAuthorized(isAuthorizedFromExtension);
-
-    const isAuthorizedListener = (event: MessageEvent) => {
-      const { command, payload, error } = event.data;
-      if (error) return;
-      else if (command === "is-authorized") setIsAuthorized(payload);
-    };
-    window.addEventListener("message", isAuthorizedListener);
-    return () => window.removeEventListener("message", isAuthorizedListener);
-  }, []);
-
   return (
     <main className="flex flex-col gap-1">
       <VSCodeTextField
-        autoFocus={true}
         placeholder="Paste a GitHub Repo URL"
         onInput={(e) => setGithubRepoUrl((e.target as HTMLInputElement).value)}
         onKeyDown={(e) => e.key === "Enter" && onSubmitUrl()}
       />
-      <VSCodeButton onClick={onSubmitUrl} appearance="primary">
+      <VSCodeButton onClick={onSubmitUrl} className="mb-4" appearance="primary">
         {isAuthorized ? "Fetch" : "Authorize & Fetch"}
       </VSCodeButton>
     </main>

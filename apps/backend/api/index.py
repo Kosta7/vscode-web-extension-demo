@@ -13,6 +13,7 @@ from .ratelimit import ratelimit
 from .auth import auth
 from .aws_client import aws_client
 from .redis_instance import redis
+from .get_session_id import get_session_id
 
 
 serializer = URLSafeTimedSerializer(environ["SECRET_KEY"])
@@ -24,6 +25,7 @@ CORS(
     resources={
         r"/authorize": {"methods": ["POST"]},
         r"/check-authorization": {"methods": ["GET"]},
+        r"/unauthorize": {"methods": ["POST"]},
         r"/repos/<owner>/<repo>/files": {"methods": ["GET"]},
         r"/repos/<owner>/<repo>/files/<path:file_path>": {"methods": ["GET"]},
     },
@@ -135,6 +137,22 @@ def callback():  # check the origin of the request?
 @ratelimit("polling")
 @auth
 def check_authorization():
+    return ("Success", 200)
+
+
+@app.route("/unauthorize", methods=["POST"])
+@ratelimit("guest")
+def unauthorize():
+    session_id = get_session_id(request)
+    if not session_id:
+        abort(400, "No session found")
+
+    try:
+        aws_client.delete_secret(SecretId=session_id, ForceDeleteWithoutRecovery=True)
+    except Exception as e:
+        app.logger.error(e)
+        abort(500, "Unknown error")
+
     return ("Success", 200)
 
 
