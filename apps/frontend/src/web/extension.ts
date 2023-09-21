@@ -56,6 +56,7 @@ export function activate(context: vscode.ExtensionContext) {
       };
 
       const showRepo = () => {
+        treeView.title = repoId;
         vscode.commands.executeCommand("setContext", "showFileTree", true);
         treeDataProvider.refresh();
         context.subscriptions.push(treeView);
@@ -104,6 +105,7 @@ export function activate(context: vscode.ExtensionContext) {
     "goToGithubUrlInput",
     () => {
       vscode.commands.executeCommand("setContext", "showFileTree", false);
+      treeView.title = "";
     }
   );
 
