@@ -23,7 +23,6 @@ callback_url = (
     else "http://localhost:8080/callback"
 )
 scope = "public_repo"
-github_auth_url = f"https://github.com/login/oauth/authorize?client_id={client_id}&redirect_uri={quote(callback_url)}&scope={scope}&state={session_id}"
 
 
 @oauth.route("/authorize", methods=["POST"])
@@ -35,6 +34,8 @@ def authorize():
     except Exception as e:
         current_app.logger.error(e)
         abort(500, "Unknown error")
+
+    github_auth_url = f"https://github.com/login/oauth/authorize?client_id={client_id}&redirect_uri={quote(callback_url)}&scope={scope}&state={session_id}"
 
     return jsonify(
         {
