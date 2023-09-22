@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 
 import { treeDataProvider, treeView } from "../providers";
-import { KEYS } from "../utilities/constants";
+import { KEYS, FILE_CONTENT_URI_SCHEME } from "../utilities/constants";
 
 export const setIsFileTreeOpen = (
   context: vscode.ExtensionContext,
@@ -23,5 +23,16 @@ export const setIsFileTreeOpen = (
     );
     treeDataProvider.empty();
     treeView.title = "";
+
+    vscode.workspace.textDocuments.forEach(async (document) => {
+      if (document.uri.scheme === FILE_CONTENT_URI_SCHEME) {
+        await vscode.window.showTextDocument(document, {
+          preview: false,
+          viewColumn: vscode.ViewColumn.One,
+          preserveFocus: false,
+        });
+        vscode.commands.executeCommand("workbench.action.closeActiveEditor");
+      }
+    });
   }
 };
