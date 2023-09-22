@@ -24,13 +24,7 @@ export const treeView = vscode.window.createTreeView("fileTree", {
 
 export const fileContentProvider = new FileContentProvider();
 
-vscode.window.onDidChangeActiveTextEditor((editor) => {
-  if (!editor) return;
-
-  const filePath = editor.document.uri.path;
-  const treeItem = treeDataProvider.getTreeItemByPath(filePath);
-  treeItem && treeView.reveal(treeItem);
-});
+let onDidChangeActiveTextEditorListener: vscode.Disposable;
 
 export const activateProviders = (context: vscode.ExtensionContext) => {
   githubUrlInputViewProvider.setContext(context);
@@ -42,9 +36,19 @@ export const activateProviders = (context: vscode.ExtensionContext) => {
     "github-files",
     fileContentProvider
   );
+
+  onDidChangeActiveTextEditorListener =
+    vscode.window.onDidChangeActiveTextEditor((editor) => {
+      if (!editor) return;
+
+      const filePath = editor.document.uri.path;
+      const treeItem = treeDataProvider.getTreeItemByPath(filePath);
+      treeItem && treeView.reveal(treeItem);
+    });
 };
 
 export const deactivateProviders = () => {
   githubUrlInputView.dispose();
   treeView.dispose();
+  onDidChangeActiveTextEditorListener.dispose();
 };
