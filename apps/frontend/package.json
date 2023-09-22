@@ -1,6 +1,6 @@
 {
-  "name": "frontend",
-  "displayName": "Demo",
+  "name": "repoview",
+  "displayName": "RepoView",
   "description": "",
   "version": "0.0.1",
   "publisher": "kosta7",
@@ -35,7 +35,7 @@
       "activitybar": [
         {
           "id": "githubExplorer",
-          "title": "Github Explorer",
+          "title": "RepoView",
           "icon": "assets/activitybarIcon.svg"
         }
       ]
@@ -45,12 +45,12 @@
         {
           "type": "webview",
           "id": "githubUrlInput",
-          "name": "Github Explorer",
+          "name": "RepoView",
           "when": "!isFileTreeOpen"
         },
         {
           "id": "fileTree",
-          "name": "Github Explorer",
+          "name": "RepoView",
           "when": "isFileTreeOpen"
         }
       ]
