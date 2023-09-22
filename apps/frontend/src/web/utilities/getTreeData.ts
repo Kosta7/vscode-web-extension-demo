@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 
 import { authorizedFetch } from "./authorizedFetch";
-import { apiUrlOrigin } from "../utilities/constants";
+import { apiUrlOrigin, KEYS } from "../utilities/constants";
 
 export type TreeData = {
   path: string;
@@ -11,7 +11,7 @@ export type TreeData = {
 }[];
 
 export const getTreeData = async (context: vscode.ExtensionContext) => {
-  const repoId = context.globalState.get("repoId") as string;
+  const repoId = context.globalState.get(KEYS.REPO_ID) as string;
   if (!repoId) throw new Error("Error getting repository name or owner");
 
   const cachedTreeData: { treeData: TreeData; expiryDate: Date } | undefined =
@@ -26,7 +26,7 @@ export const getTreeData = async (context: vscode.ExtensionContext) => {
     }
   }
 
-  const sessionId = await context.secrets.get("sessionId");
+  const sessionId = await context.secrets.get(KEYS.SESSION_ID);
   const response = await authorizedFetch(
     `${apiUrlOrigin}/repos/${repoId}/files`,
     {

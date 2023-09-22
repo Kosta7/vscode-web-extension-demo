@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 
-import { apiUrlOrigin } from "../utilities/constants";
+import { apiUrlOrigin, KEYS } from "../utilities/constants";
 import { setIsAuthorized } from "./setIsAuthorized";
 import { setIsFileTreeOpen } from "./setIsFileTreeOpen";
 
@@ -10,7 +10,7 @@ const pollAuthorizationStatus = async (
   callback: Function
 ) => {
   try {
-    const sessionId = await context.secrets.get("sessionId");
+    const sessionId = await context.secrets.get(KEYS.SESSION_ID);
     if (!sessionId) return;
 
     const response = await fetch(`${apiUrlOrigin}/check-authorization`, {

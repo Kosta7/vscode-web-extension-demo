@@ -3,7 +3,12 @@
   "displayName": "RepoView",
   "description": "",
   "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kosta7/vscode-web-extension-demo.git"
+  },
   "publisher": "kosta7",
+  "license": "MIT",
   "engines": {
     "vscode": "^1.82.0"
   },

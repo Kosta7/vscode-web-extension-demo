@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 
 import { getTreeData, type TreeData } from "../utilities/getTreeData";
-import { LEADING_SLASH } from "../utilities/constants";
+import { LEADING_SLASH, COMMANDS } from "../utilities/constants";
 
 export class TreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
   private treeData: TreeData = [];
@@ -105,7 +105,7 @@ export class TreeItem extends vscode.TreeItem {
     this.parent = parent;
     if (!isDirectory) {
       this.command = {
-        command: "openFile",
+        command: COMMANDS.OPEN_FILE,
         title: "Fetch and open file",
         arguments: [this],
       };

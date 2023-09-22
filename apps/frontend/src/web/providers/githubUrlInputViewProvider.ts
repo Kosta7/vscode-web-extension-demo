@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 
 import { getUri } from "../utilities/getUri";
 import { getNonce } from "../utilities/getNonce";
+import { KEYS, COMMANDS } from "../utilities/constants";
 
 export class GithubUrlInputViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "myWebviewView";
@@ -46,10 +47,14 @@ export class GithubUrlInputViewProvider implements vscode.WebviewViewProvider {
       switch (command) {
         case "submit-repo":
           if (error) vscode.window.showErrorMessage(error);
-          else vscode.commands.executeCommand("authorizeAndFetch", payload);
+          else
+            vscode.commands.executeCommand(
+              COMMANDS.AUTHORIZE_AND_FETCH,
+              payload
+            );
           break;
         case "unauthorize":
-          vscode.commands.executeCommand("unauthorize");
+          vscode.commands.executeCommand(COMMANDS.UNAUTHORIZE);
           break;
       }
     });
@@ -87,8 +92,9 @@ export class GithubUrlInputViewProvider implements vscode.WebviewViewProvider {
 
     const nonce = getNonce();
 
-    const isAuthorized =
-      !!this._extensionContext.globalState.get("isAuthorized");
+    const isAuthorized = !!this._extensionContext.globalState.get(
+      KEYS.IS_AUTHORIZED
+    );
 
     // Tip: Install the es6-string-html VS Code extension to enable code highlighting below
     return `

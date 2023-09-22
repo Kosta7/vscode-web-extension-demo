@@ -1,5 +1,7 @@
 import * as vscode from "vscode";
 
+import { FILE_CONTENT_URI_SCHEME } from "../utilities/constants";
+
 import { FileContentProvider } from "./fileContentProvider";
 import { GithubUrlInputViewProvider } from "./githubUrlInputViewProvider";
 import { TreeDataProvider, TreeItem } from "./treeDataProvider";
@@ -33,7 +35,7 @@ export const activateProviders = (context: vscode.ExtensionContext) => {
 
   context.subscriptions.push(githubUrlInputView, treeView);
   vscode.workspace.registerTextDocumentContentProvider(
-    "github-files",
+    FILE_CONTENT_URI_SCHEME,
     fileContentProvider
   );
 

@@ -1,17 +1,22 @@
 import * as vscode from "vscode";
 
 import { githubUrlInputViewProvider } from "../providers";
+import { KEYS } from "../utilities/constants";
 
 export const setIsAuthorized = (
   context: vscode.ExtensionContext,
   isAuthorized: boolean
 ) => {
-  context.globalState.update("isAuthorized", isAuthorized);
+  context.globalState.update(KEYS.IS_AUTHORIZED, isAuthorized);
   githubUrlInputViewProvider.setIsUserAuthorized(isAuthorized);
-  vscode.commands.executeCommand("setContext", "isAuthorized", isAuthorized);
+  vscode.commands.executeCommand(
+    KEYS.SET_CONTEXT,
+    KEYS.IS_AUTHORIZED,
+    isAuthorized
+  );
 };
 
 export const propagateIsAuthorized = (context: vscode.ExtensionContext) => {
-  const isAuthorized = context.globalState.get("isAuthorized");
+  const isAuthorized = context.globalState.get(KEYS.IS_AUTHORIZED);
   setIsAuthorized(context, !!isAuthorized);
 };

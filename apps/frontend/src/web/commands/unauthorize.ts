@@ -1,12 +1,12 @@
 import * as vscode from "vscode";
 
 import { setIsAuthorized } from "./setIsAuthorized";
-import { apiUrlOrigin } from "../utilities/constants";
+import { apiUrlOrigin, KEYS } from "../utilities/constants";
 import { setIsFileTreeOpen } from "./setIsFileTreeOpen";
 
 export const unauthorize = async (context: vscode.ExtensionContext) => {
   try {
-    const sessionId = await context.secrets.get("sessionId");
+    const sessionId = await context.secrets.get(KEYS.SESSION_ID);
     if (!sessionId) throw new Error("Error getting session id");
 
     await fetch(`${apiUrlOrigin}/unauthorize`, {
@@ -20,7 +20,7 @@ export const unauthorize = async (context: vscode.ExtensionContext) => {
   } finally {
     setIsAuthorized(context, false);
     setIsFileTreeOpen(context, false);
-    context.secrets.delete("sessionId");
+    context.secrets.delete(KEYS.SESSION_ID);
     vscode.window.showInformationMessage("Unauthorized");
   }
 };

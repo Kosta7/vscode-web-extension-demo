@@ -1,7 +1,12 @@
 import * as vscode from "vscode";
 
 import { authorizedFetch } from "../utilities/authorizedFetch";
-import { apiUrlOrigin, LEADING_SLASH } from "../utilities/constants";
+import {
+  apiUrlOrigin,
+  LEADING_SLASH,
+  FILE_CONTENT_URI_SCHEME,
+  KEYS,
+} from "../utilities/constants";
 
 export class FileContentProvider implements vscode.TextDocumentContentProvider {
   onDidChange?: vscode.Event<vscode.Uri>;
@@ -17,13 +22,15 @@ export class FileContentProvider implements vscode.TextDocumentContentProvider {
       throw new Error("No extension context in a provider");
     }
 
-    if (uri.scheme === "github-files") {
+    if (uri.scheme === FILE_CONTENT_URI_SCHEME) {
       try {
-        const repoId = this._extensionContext.globalState.get("repoId");
+        const repoId = this._extensionContext.globalState.get(KEYS.REPO_ID);
         const path = String(
-          this._extensionContext.globalState.get("path")
+          this._extensionContext.globalState.get(KEYS.PATH)
         ).replace(LEADING_SLASH, "");
-        const sessionId = await this._extensionContext.secrets.get("sessionId");
+        const sessionId = await this._extensionContext.secrets.get(
+          KEYS.SESSION_ID
+        );
         const response = await authorizedFetch(
           `${apiUrlOrigin}/repos/${repoId}/files/${path}`,
           {
