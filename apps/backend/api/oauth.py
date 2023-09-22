@@ -15,6 +15,17 @@ serializer = URLSafeTimedSerializer(environ["SECRET_KEY"])
 oauth = Blueprint("oauth", __name__)
 
 
+client_id = environ["GITHUB_CLIENT_ID"]
+client_secret = environ["GITHUB_CLIENT_SECRET"]
+callback_url = (
+    url_for("oauth.callback", _external=True)
+    if environ["ENV"] == "production"
+    else "http://localhost:8080/callback"
+)
+scope = "public_repo"
+github_auth_url = f"https://github.com/login/oauth/authorize?client_id={client_id}&redirect_uri={quote(callback_url)}&scope={scope}&state={session_id}"
+
+
 @oauth.route("/authorize", methods=["POST"])
 @ratelimit("guest")
 def authorize():
@@ -24,15 +35,6 @@ def authorize():
     except Exception as e:
         current_app.logger.error(e)
         abort(500, "Unknown error")
-
-    client_id = environ["GITHUB_CLIENT_ID"]
-    scope = "public_repo"
-    callback_url = (
-        url_for("callback", _external=True)
-        if environ["ENV"] == "production"
-        else "http://localhost:8080/callback"
-    )
-    github_auth_url = f"https://github.com/login/oauth/authorize?client_id={client_id}&redirect_uri={quote(callback_url)}&scope={scope}&state={session_id}"
 
     return jsonify(
         {
@@ -64,13 +66,6 @@ def callback():  # check the origin of the request?
     if "SecretString" not in session_secret:
         abort(500, "Session not found")
 
-    client_id = environ["GITHUB_CLIENT_ID"]
-    client_secret = environ["GITHUB_CLIENT_SECRET"]
-    callback_url = (
-        url_for("callback", _external=True)
-        if environ["ENV"] == "production"
-        else "http://localhost:8080/callback"
-    )
     data = {
         "client_id": client_id,
         "client_secret": client_secret,
