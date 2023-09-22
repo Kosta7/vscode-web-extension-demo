@@ -10,3 +10,8 @@ export const setIsAuthorized = (
   githubUrlInputViewProvider.setIsUserAuthorized(isAuthorized);
   vscode.commands.executeCommand("setContext", "isAuthorized", isAuthorized);
 };
+
+export const propagateIsAuthorized = (context: vscode.ExtensionContext) => {
+  const isAuthorized = context.globalState.get("isAuthorized");
+  setIsAuthorized(context, !!isAuthorized);
+};

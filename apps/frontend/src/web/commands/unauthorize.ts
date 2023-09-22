@@ -21,5 +21,6 @@ export const unauthorize = async (context: vscode.ExtensionContext) => {
     setIsAuthorized(context, false);
     setIsFileTreeOpen(context, false);
     context.secrets.delete("sessionId");
+    vscode.window.showInformationMessage("Unauthorized");
   }
 };

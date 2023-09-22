@@ -7,11 +7,11 @@ export const setIsFileTreeOpen = (
   isFileTreeOpen: boolean
 ) => {
   if (isFileTreeOpen) {
-    vscode.commands.executeCommand("setContext", "showFileTree", true);
+    vscode.commands.executeCommand("setContext", "isFileTreeOpen", true);
     treeDataProvider.refresh();
     treeView.title = context.globalState.get("repoId");
   } else {
-    vscode.commands.executeCommand("setContext", "showFileTree", false);
+    vscode.commands.executeCommand("setContext", "isFileTreeOpen", false);
     treeDataProvider.empty();
     treeView.title = "";
   }

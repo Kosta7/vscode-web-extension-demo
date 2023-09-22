@@ -7,7 +7,7 @@ import { setIsFileTreeOpen } from "./setIsFileTreeOpen";
 let pollAuthorizationStatusIntervalId: NodeJS.Timeout;
 const pollAuthorizationStatus = async (
   context: vscode.ExtensionContext,
-  callback: () => void
+  callback: Function
 ) => {
   try {
     const sessionId = await context.secrets.get("sessionId");
@@ -31,11 +31,11 @@ const pollAuthorizationStatus = async (
 
 export const authorize = async (context: vscode.ExtensionContext) => {
   try {
-    const authorizationResponse = await fetch(`${apiUrlOrigin}/authorize`, {
+    const response = await fetch(`${apiUrlOrigin}/authorize`, {
       method: "POST",
     });
     const { redirect_url: redirectUrl, session_id: sessionId } =
-      await authorizationResponse.json();
+      await response.json();
     if (!redirectUrl || !sessionId)
       throw new Error("Invalid response from the server");
 
