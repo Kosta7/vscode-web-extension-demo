@@ -1,4 +1,4 @@
-from flask import request, abort
+from flask import request, abort, current_app
 from functools import wraps
 from upstash_ratelimit import Ratelimit, FixedWindow, TokenBucket
 from typing import Literal
@@ -6,7 +6,6 @@ from os import environ
 
 from .redis_instance import redis
 from .get_session_id import get_session_id
-from .app import app
 
 
 RateLimitType = Literal["guest", "authorized", "polling"]
@@ -46,7 +45,7 @@ def ratelimit(type: RateLimitType):
                 )
                 response = ratelimit.limit(identifier)
             except Exception as e:
-                app.logger.error(e)
+                current_app.logger.error(e)
                 abort(500, "Unknown error")
 
             if not response.allowed:
