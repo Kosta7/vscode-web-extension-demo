@@ -11,7 +11,7 @@ This [VS Code web extension](https://code.visualstudio.com/api/extension-guides/
     - Initialized with [vscode-generator-code](https://github.com/Microsoft/vscode-generator-code)
     - Webview: [vscode-webview-ui-toolkit](https://github.com/microsoft/vscode-webview-ui-toolkit), [Vite](https://vitejs.dev), [React](https://react.dev)
 - Backend
-    - **Docs**: [repos.md](apps/backend/repos.md), [oauth.md](apps/backend/oauth.md)
+    - **Docs**: [oauth.md](apps/backend/oauth.md), [repos.md](apps/backend/repos.md)
     - Framework: [Flask](https://flask.palletsprojects.com/en/2.3.x/)
     - Deployable to [Vercel Serverless Functions](https://vercel.com/docs/functions/serverless-functions)
     - Secrets: [AWS](https://aws.amazon.com/secrets-manager/)
