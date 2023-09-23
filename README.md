@@ -41,7 +41,7 @@ This [VS Code web extension](https://code.visualstudio.com/api/extension-guides/
         | Enable Device Flow          | `false`                                    |                              |
     3. Copy generated Client ID and Client Secret and paste them into `apps/backend/.env` as `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET`
     4. Run `python -c 'import secrets; print(secrets.token_hex())'` and paste the result into `apps/backend/.env` as `SECRET_KEY`
-3. Activate a new Python environment
+3. Activate a new Python environment (e.g. using `python -m venv`)
     1. `python -m venv apps/backend/venv`
     2. `source apps/backend/venv/bin/activate`
 4. Install dependencies:
