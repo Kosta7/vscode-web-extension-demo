@@ -1,6 +1,9 @@
 # RepoView
 
-This [VS Code web extension](https://code.visualstudio.com/api/extension-guides/web-extensions) allows browsing GitHub repositories. After user authorization, it fetches and displays repository files in a sidebar. Features include caching and rate limiting.
+This [VS Code web extension](https://code.visualstudio.com/api/extension-guides/web-extensions) allows browsing GitHub repositories. After user authorization, repo files appear in sidebar; individual files can be clicked to view contents in a panel. Includes caching and rate limiting.
+
+<img width="1107" alt="image" src="https://github.com/kosta7/RepoView/assets/22333399/c3fe4c0f-9ef7-4faa-b420-c97f65489e5a">
+<img width="1107" alt="image" src="https://github.com/kosta7/RepoView/assets/22333399/ab389602-921b-4538-8781-947c3a891576">
 
 ## Stack
 
