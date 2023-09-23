@@ -4,7 +4,7 @@ import { apiUrlOrigin, KEYS } from "../utilities/constants";
 import { setIsAuthorized } from "./setIsAuthorized";
 import { setIsFileTreeOpen } from "./setIsFileTreeOpen";
 
-let pollAuthorizationStatusIntervalId: NodeJS.Timeout;
+let pollAuthorizationStatusTimeoutId: NodeJS.Timeout;
 const pollAuthorizationStatus = async (
   context: vscode.ExtensionContext,
   callback: Function
@@ -22,7 +22,14 @@ const pollAuthorizationStatus = async (
     if (response.status === 200) {
       setIsAuthorized(context, true);
       callback();
-      clearInterval(pollAuthorizationStatusIntervalId);
+      clearTimeout(pollAuthorizationStatusTimeoutId);
+    } else if (response.status === 401) {
+      pollAuthorizationStatusTimeoutId = setTimeout(
+        () => pollAuthorizationStatus(context, callback),
+        1000
+      );
+    } else {
+      throw new Error("Failed to authorize, pleasae try again");
     }
   } catch (error) {
     vscode.window.showErrorMessage(String(error));
@@ -42,7 +49,7 @@ export const authorize = async (context: vscode.ExtensionContext) => {
     vscode.env.openExternal(vscode.Uri.parse(redirectUrl));
     context.secrets.store("sessionId", sessionId);
 
-    pollAuthorizationStatusIntervalId = setInterval(
+    pollAuthorizationStatusTimeoutId = setTimeout(
       () =>
         pollAuthorizationStatus(context, () =>
           setIsFileTreeOpen(context, true)
@@ -51,7 +58,7 @@ export const authorize = async (context: vscode.ExtensionContext) => {
     );
     setTimeout(
       () => {
-        clearInterval(pollAuthorizationStatusIntervalId);
+        clearTimeout(pollAuthorizationStatusTimeoutId);
       },
       1000 * 60 * 10
     ); // 10 minutes

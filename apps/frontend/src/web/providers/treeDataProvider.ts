@@ -79,12 +79,10 @@ export class TreeDataProvider implements vscode.TreeDataProvider<TreeItem> {
   }
 
   async refresh(): Promise<void> {
-    if (!this._extensionContext) {
-      throw new Error("No extension context in a provider");
-    }
-
     this.empty();
 
+    if (!this._extensionContext)
+      throw new Error("No extension context in a provider");
     this.treeData = await getTreeData(this._extensionContext);
     this._onDidChangeTreeData.fire();
   }
