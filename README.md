@@ -31,7 +31,7 @@ This [VS Code web extension](https://code.visualstudio.com/api/extension-guides/
 ### Setup
 
 1. Get environment variables
-    1. Copy [./apps/backend/.env.example](apps/backend/.env.example)  file to `apps/backend/.env`
+    1. Copy the file [./apps/backend/.env.example](apps/backend/.env.example) to `./apps/backend/.env`
     2. [Register a new OAuth application](https://github.com/settings/applications/new) on GitHub with these parameters:
         | Key                         | Value                                      | Example                      |
         |-----------------------------|--------------------------------------------|------------------------------|
@@ -39,8 +39,8 @@ This [VS Code web extension](https://code.visualstudio.com/api/extension-guides/
         | Homepage URL                | any                                        | `https://github.com/kosta7/RepoView` |
         | Authorization callback URL  | `http://localhost:8080`                    |                              |
         | Enable Device Flow          | `false`                                    |                              |
-    3. Copy generated Client ID and Client Secret and paste them into `apps/backend/.env` as `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET`
-    4. Run `python -c 'import secrets; print(secrets.token_hex())'` and paste the result into `apps/backend/.env` as `SECRET_KEY`
+    3. Copy generated Client ID and Client Secret and paste them into `./apps/backend/.env` as `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET`
+    4. Run `python -c 'import secrets; print(secrets.token_hex())'` and paste the result into `./apps/backend/.env` as `SECRET_KEY`
 3. Activate a new Python environment (e.g. using `python -m venv`)
     1. `python -m venv apps/backend/venv`
     2. `source apps/backend/venv/bin/activate`
