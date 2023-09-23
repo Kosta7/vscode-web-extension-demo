@@ -1,6 +1,6 @@
 # RepoView
 
-This [VS Code web extension](https://code.visualstudio.com/api/extension-guides/web-extensions) allows browsing GitHub repositories. After user authorization, repo files appear in sidebar; individual files can be clicked to view contents in a panel. Includes caching and rate limiting.
+This VS Code web extension allows browsing GitHub repositories. After user authorization, repo files appear in sidebar; individual files can be clicked to view contents in a panel. Includes caching and rate limiting.
 
 <img width="1107" alt="image" src="https://github.com/kosta7/RepoView/assets/22333399/c3fe4c0f-9ef7-4faa-b420-c97f65489e5a">
 <img width="1107" alt="image" src="https://github.com/kosta7/RepoView/assets/22333399/ab389602-921b-4538-8781-947c3a891576">
@@ -8,15 +8,15 @@ This [VS Code web extension](https://code.visualstudio.com/api/extension-guides/
 ## Stack
 
 - Frontend
-    - Initialized with [vscode-generator-code](https://github.com/Microsoft/vscode-generator-code)
-    - Webview: [vscode-webview-ui-toolkit](https://github.com/microsoft/vscode-webview-ui-toolkit), [Vite](https://vitejs.dev), [React](https://react.dev)
+    - [VS Code web extension](https://code.visualstudio.com/api/extension-guides/web-extensions): initialized with [vscode-generator-code](https://github.com/Microsoft/vscode-generator-code)
+        - Webview: [vscode-webview-ui-toolkit](https://github.com/microsoft/vscode-webview-ui-toolkit), [Vite](https://vitejs.dev), [React](https://react.dev)
 - Backend
     - **Docs**: [oauth.md](apps/backend/oauth.md), [repos.md](apps/backend/repos.md)
     - Framework: [Flask](https://flask.palletsprojects.com/en/2.3.x/)
-    - Deployable to [Vercel Serverless Functions](https://vercel.com/docs/functions/serverless-functions)
     - Secrets: [AWS](https://aws.amazon.com/secrets-manager/)
     - Cache: [Redis](https://redis.io) (dev), [Upstash](https://upstash.com) (prod)
     - Rate limit: [Upstash](https://upstash.com) (prod)
+    - Deployable to [Vercel Serverless Functions](https://vercel.com/docs/functions/serverless-functions)
 - Build: [Turborepo](https://turbo.build/repo/docs)
 
 ## Local development
