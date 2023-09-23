@@ -5,16 +5,16 @@ This [VS Code web extension](https://code.visualstudio.com/api/extension-guides/
 ## Stack
 
 - Frontend
-    - Initialized with vscode-generator-code
+    - Initialized with [vscode-generator-code](https://github.com/Microsoft/vscode-generator-code)
     - Webview: [vscode-webview-ui-toolkit](https://github.com/microsoft/vscode-webview-ui-toolkit), [Vite](https://vitejs.dev), [React](https://react.dev)
 - Backend
-    - Docs: [repos.md](apps/backend/repos.md), [oauth.md](apps/backend/oauth.md)
+    - **Docs**: [repos.md](apps/backend/repos.md), [oauth.md](apps/backend/oauth.md)
     - Framework: [Flask](https://flask.palletsprojects.com/en/2.3.x/)
     - Deployable to [Vercel Serverless Functions](https://vercel.com/docs/functions/serverless-functions)
     - Secrets: [AWS](https://aws.amazon.com/secrets-manager/)
     - Cache: [Redis](https://redis.io) (dev), [Upstash](https://upstash.com) (prod)
     - Rate limit: [Upstash](https://upstash.com) (prod)
-- Repo: [Turborepo](https://turbo.build/repo/docs)
+- Build: [Turborepo](https://turbo.build/repo/docs)
 
 ## Local development
 
@@ -47,7 +47,7 @@ This [VS Code web extension](https://code.visualstudio.com/api/extension-guides/
 4. Install dependencies:
     1. `pnpm install`
     2. `pip install -r apps/backend/requirements.txt`
-5. Start Docker (to enable VS Code development server, caching, and secrets management)
+5. Start Docker (to be able to run VS Code development server, Redis, and AWS)
 
 ### Running
 
