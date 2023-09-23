@@ -1,4 +1,4 @@
-# Demo Extension
+# RepoView
 
 This VS Code web extension allows browsing GitHub repositories. After user authorization, it fetches and displays repository files in a sidebar.
 
