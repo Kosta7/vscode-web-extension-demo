@@ -38,3 +38,5 @@ yarn-error.log*
 /apps/frontend/.vscode-test-web
 *.vsix
 dist
+.pnpm-store
+venv
